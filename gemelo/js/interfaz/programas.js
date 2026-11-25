@@ -80,11 +80,15 @@ export function crearGestorProgramas(opc) {
     const ps = opc.puntos ? opc.puntos() : [];
     if (!ps.length) { aviso('No hay puntos: guárdalos antes con HE en el pendant.', true); return; }
     const f = (v) => String(Math.round(v * 10) / 10);
-    const lineas = ['# Generado desde los puntos del pendant. Añade GO (abrir) y GC (cerrar) donde toque.', 'NT', 'SP 3'];
-    for (const p of ps) lineas.push('MP ' + [p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].map(f).join(',') + '   # punto ' + p.n);
+    const lineas = ['# Generado desde los puntos del pendant (cada punto recuerda si la pinza estaba abierta o cerrada).', 'NT', 'SP 3', 'GO'];
+    let pinza = 'abierta';                                   // tras el GO inicial
+    for (const p of ps) {
+      lineas.push('MP ' + [p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].map(f).join(',') + '   # punto ' + p.n);
+      if ((p.pinza === 'abierta' || p.pinza === 'cerrada') && p.pinza !== pinza) { pinza = p.pinza; lineas.push(pinza === 'cerrada' ? 'GC   # pinza cerrada en el punto ' + p.n : 'GO   # pinza abierta en el punto ' + p.n); }
+    }
     mostrar({ nombre: nombreLibre('Desde puntos'), descripcion: ps.length + ' puntos del pendant', ciclico: false, lineas });
     nombreCargado = null; sel.value = ''; bBorrar.disabled = true;
-    aviso('Programa creado con ' + ps.length + ' puntos. Revísalo, añade la pinza y pulsa Guardar.');
+    aviso('Programa creado con ' + ps.length + ' puntos y el estado de la pinza de cada uno. Revísalo y pulsa Guardar.');
   });
   bVal.addEventListener('click', () => { const p = validarEditor(); if (p) aviso('Correcto: ' + p.lineas.length + ' líneas válidas.'); });
   bGuardar.addEventListener('click', () => {

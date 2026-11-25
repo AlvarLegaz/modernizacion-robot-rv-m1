@@ -370,7 +370,7 @@ export function crearPendant(raiz) {
       for (const p of ps) {
         const li = h('li', p.n === st.punto ? 'sel' : '');
         li.dataset.n = p.n;
-        li.textContent = String(p.n).padStart(3, ' ') + '  ' + [p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].map(fmt).join(' ');
+        li.textContent = String(p.n).padStart(3, ' ') + '  ' + [p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].map(fmt).join(' ') + (p.pinza === 'cerrada' ? '  CERR' : p.pinza === 'abierta' ? '  ABIE' : '');
         lista.appendChild(li);
       }
     }

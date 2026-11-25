@@ -53,7 +53,11 @@
       case 'MJ': a = nums(5); break;
       case 'DS': a = nums(3); break;
       case 'MP': a = nums(5); break;
-      case 'PD': a = nums(6, [true]); break;
+      case 'PD': {                      // PD n,x,y,z,p,r[,O|C]: el 7.º valor (opcional) es el estado de la pinza guardado con el punto
+        const ex = partes.length === 7 && ['O', 'C'].includes(partes[6]) ? partes.pop() : null;
+        a = nums(6, [true]); if (a && ex) a.push(ex);
+        break;
+      }
       case 'HE': a = nums(1, [true]); break;
       case 'TL': a = nums(1); break;
       case 'MO': case 'SP': {
@@ -218,12 +222,12 @@
         case 'HE': {
           if (SUP.he_requiere_nt && !exigirRef()) return;
           if (a[0] < 1 || a[0] > CFG.posiciones_max) { error(2, 'posicion_fuera_de_rango', linea); return; }
-          s.posiciones[a[0]] = { pose: pose(), q: s.q.slice() };
+          s.posiciones[a[0]] = { pose: pose(), q: s.q.slice(), pinza: s.pinzaOrden };      // el punto recuerda si la pinza estaba abierta o cerrada
           return;
         }
         case 'PD': {
           if (a[0] < 1 || a[0] > CFG.posiciones_max) { error(2, 'posicion_fuera_de_rango', linea); return; }
-          s.posiciones[a[0]] = { pose: { x: a[1], y: a[2], z: a[3], p: a[4], r: a[5] }, q: null };
+          s.posiciones[a[0]] = { pose: { x: a[1], y: a[2], z: a[3], p: a[4], r: a[5] }, q: null, pinza: a[6] === 'O' ? 'abierta' : a[6] === 'C' ? 'cerrada' : 'desconocida' };
           return;
         }
         case 'MO': {
@@ -307,7 +311,7 @@
         pinza: s.pinzaOrden, apertura: s.apertura,
         ocupado: !!s.accion, cola: s.entrada.length,
         moviendo: !!(s.accion && s.accion.tipo !== 'pinza'),
-        posiciones: Object.keys(s.posiciones).map(Number).sort((u, v) => u - v).map((n) => ({ n, pose: Object.assign({}, s.posiciones[n].pose) })),
+        posiciones: Object.keys(s.posiciones).map(Number).sort((u, v) => u - v).map((n) => ({ n, pose: Object.assign({}, s.posiciones[n].pose), pinza: s.posiciones[n].pinza || 'desconocida' })),
         conectado: s.conectado, tiempo_ms: s.tiempo_ms
       };
     }

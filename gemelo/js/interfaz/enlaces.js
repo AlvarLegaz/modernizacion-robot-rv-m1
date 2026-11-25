@@ -47,7 +47,12 @@ export function crearEnlaceLocal(ctrl) {
     jogMundo: (dx, dy, dz) => enviar('DS ' + [dx, dy, dz].map(f1).join(',')),
     pinza: (a) => enviar(a === 'abrir' ? 'GO' : 'GC'),
     guardarPunto: (n) => { enviar('HE ' + n, (er) => { if (er === 0) aviso('Punto ' + n + ' guardado (HE ' + n + ').', 'info'); }); return true; },
-    irAPunto: (n) => { enviar('MO ' + n); return true; },
+    // MO n,O|C: llega al punto y deja la pinza como estaba al guardarlo (si se sabe)
+    irAPunto: (n) => {
+      const pt = ctrl.estado().posiciones.find((x) => x.n === n);
+      enviar('MO ' + n + (pt && pt.pinza === 'abierta' ? ',O' : pt && pt.pinza === 'cerrada' ? ',C' : ''));
+      return true;
+    },
     vaciar: () => { cola = []; },
     alAviso: (fn) => avisos.push(fn),
     cerrar() { cola = []; }
@@ -106,7 +111,7 @@ export function crearEnlaceMqtt(cliente, opc) {
       const p = cliente.posicion;
       if (!p || !p.valida) { aviso('No hay posición válida para guardar (haz HOME).'); return false; }
       puntos = puntos.filter((x) => x.n !== n);
-      puntos.push({ n, pose: { x: p.x, y: p.y, z: p.z, p: p.pitch, r: p.roll } });
+      puntos.push({ n, pose: { x: p.x, y: p.y, z: p.z, p: p.pitch, r: p.roll }, pinza: cliente.actuadores ? cliente.actuadores.pinza : 'desconocida' });
       puntos.sort((u, v) => u.n - v.n);
       guardar();
       aviso('Punto ' + n + ' guardado en el pendant (el contrato v0.3 no tiene HE).', 'info');
@@ -116,6 +121,7 @@ export function crearEnlaceMqtt(cliente, opc) {
       const pt = puntos.find((x) => x.n === n);
       if (!pt) { aviso('Punto ' + n + ' no definido.'); return false; }
       enviar('mover_pose', { x: pt.pose.x, y: pt.pose.y, z: pt.pose.z, pitch: pt.pose.p, roll: pt.pose.r });
+      if (pt.pinza === 'abierta' || pt.pinza === 'cerrada') enviar('pinza', { accion: pt.pinza === 'cerrada' ? 'cerrar' : 'abrir' });   // y la pinza como estaba
       return true;
     },
     vaciar() { if (cliente.pendientes() > 0) { enviar('parar'); } cliente.olvidarPendientes(); },

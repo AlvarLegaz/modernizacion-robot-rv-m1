@@ -227,3 +227,16 @@ test('DS desde el origen (J4 en su tope) se mueve en X, Y y Z sin error', () => 
     assert.equal(c.estado().err, 0, l + ' → ' + c.estado().motivoError);
   }
 });
+
+test('los puntos guardan el estado de la pinza (HE) y PD lo acepta como 7.º valor opcional', () => {
+  const c = crearControladora();
+  referenciar(c);
+  c.enviar('GC'); hastaReposo(c); c.enviar('HE 1');
+  c.enviar('GO'); hastaReposo(c); c.enviar('HE 2');
+  c.enviar('PD 3,300,0,100,-90,0,C'); c.enviar('PD 4,300,0,100,-90,0');
+  const ps = Object.fromEntries(c.estado().posiciones.map((p) => [p.n, p.pinza]));
+  assert.deepEqual(ps, { 1: 'cerrada', 2: 'abierta', 3: 'cerrada', 4: 'desconocida' });
+  assert.equal(parsear('PD 1,1,2,3,4,5,O').ok, true);
+  assert.equal(parsear('PD 1,1,2,3,4,5,X').ok, false);
+  assert.equal(parsear('PD 1,1,2,3,4').ok, false);
+});

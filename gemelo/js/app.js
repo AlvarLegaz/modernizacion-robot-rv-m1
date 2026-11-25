@@ -29,7 +29,7 @@ const CLAVE_PUNTOS = 'rvm1.puntos.emulador';
 let firmaPuntos = '';
 try {
   const guardados = JSON.parse(window.localStorage.getItem(CLAVE_PUNTOS) || '[]');
-  for (const p of guardados) ctrl.enviar('PD ' + [p.n, p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].join(','));
+  for (const p of guardados) ctrl.enviar('PD ' + [p.n, p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].join(',') + (p.pinza === 'cerrada' ? ',C' : p.pinza === 'abierta' ? ',O' : ''));
   firmaPuntos = JSON.stringify(guardados);
 } catch (e) { /* sin almacenamiento o dato corrupto: se empieza sin puntos */ }
 function guardarPuntos() {

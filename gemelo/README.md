@@ -79,6 +79,7 @@ El botón **▶ …** (arriba a la izquierda de la vista 3D) ejecuta el programa
 - **Puntos.** Los puntos HE del emulador se guardan en el navegador (`rvm1.puntos.emulador`) y se restauran al abrir con `PD`, así que no se pierden al recargar.
 - **Cargar.** Se elige en la lista y *Usar este programa* lo deja listo para el botón ▶. El último usado se recuerda en ese navegador.
 - **Exportar / importar JSON.** *Exportar JSON* baja el programa del editor (`programa-<nombre>.json`) y *Exportar todos* baja la lista completa (`programas-rvm1.json`). *Importar JSON…* admite uno o varios ficheros, con un programa, una lista o `{programas:[…]}`; rechaza con el motivo los que no validan y renombra los que coinciden con uno integrado.
+- **Puntos con estado de pinza.** Cada punto `HE n` guarda también si la pinza estaba abierta o cerrada (la lista del pendant lo muestra: `ABIE` / `CERR`), se restaura al recargar (`PD n,x,y,z,p,r[,O|C]`, el último valor es opcional) y el botón *Desde puntos* escribe un `GO` o `GC` cuando cambia. «Ir al punto» (F6) manda `MO n,O` o `MO n,C` para dejar la pinza como estaba. Los puntos guardados antes de esta versión no tienen estado y se tratan como desconocido.
 - **Se detiene** con el mismo botón, con STOP del pendant o si la controladora da error (la alarma del pendant dice cuál). Un programa no cíclico acaba solo.
 
 Formato de intercambio (`formato: "rvm1-programa"`, `version: 1`):
