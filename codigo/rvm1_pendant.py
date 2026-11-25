@@ -9,8 +9,9 @@ cartesianas (WORLD). Incluye lo imprescindible para poder hacerlo:
 conexión, homing (NT) y reset de errores.
 
 Manejo, como en un pendant real:
-- HABILITACIÓN: hay que MANTENER pulsada la barra espaciadora (hace de
-  interruptor de 3 posiciones). Al soltarla, el jog se detiene.
+- HABILITACIÓN: la barra espaciadora conmuta habilitado/deshabilitado.
+  Simplificación didáctica: en un pendant real el dispositivo de habilitación
+  es de 3 posiciones y se mantiene pulsado. STOP y perder el foco deshabilitan.
 - Jog: teclas −/+ de la derecha (ratón) o teclado Q/A, W/S, E/D, R/F, T/G.
 - COORD: alterna JOINT / WORLD. WORLD solo tras referenciar (HOME).
 - STEP/CONT: jog por paso (un incremento por pulsación) o continuo
@@ -167,8 +168,9 @@ AMBER = "#e08a00"
 F = "Segoe UI"
 MONO = "Consolas"
 
-INCREMENTS = [("PEQ", 0.1), ("MED", 1.0), ("GRA", 5.0)]
-CONT_STEP = 2.0          # mm o ° por tick en jog continuo
+INCREMENTS = [("PEQ", 0.1), ("MED", 1.0), ("GRA", 5.0), ("MUY", 10.0)]
+CONT_STEP = 2.0          # ° por tick en jog continuo articular
+CONT_STEP_WORLD = 5.0    # mm por tick en jog continuo cartesiano (más rápido, a petición del autor)
 CONT_PERIOD_MS = 200
 SP_DEFAULT = 2
 SP_WARN = 6
@@ -388,7 +390,7 @@ class Pendant(tk.Tk):
 
         # ---------- ayuda en la carcasa
         tk.Label(body,
-                 text="Mantén ESPACIO = habilitación (3 posiciones)   ·   "
+                 text="ESPACIO = habilitar / deshabilitar   ·   "
                       "Jog teclado: Q/A  W/S  E/D  R/F  T/G   ·   "
                       "La parada de emergencia real es la seta física.",
                  bg=HOUSING, fg="#aeb5be", font=(F, 8))\
@@ -418,7 +420,8 @@ class Pendant(tk.Tk):
             return
         self._held.add(k)
         if k == "space":
-            self._set_enable(True)
+            # Simplificación didáctica: ESPACIO conmuta la habilitación (en un pendant real se mantiene pulsada)
+            self._set_enable(not self.enabled)
             return "break"
         if k in KEYMAP:
             ax, s = KEYMAP[k]
@@ -434,9 +437,7 @@ class Pendant(tk.Tk):
     def _really_up(self, k):
         self._release_jobs.pop(k, None)
         self._held.discard(k)
-        if k == "space":
-            self._set_enable(False)
-        elif k in KEYMAP and self._jog == KEYMAP[k]:
+        if k in KEYMAP and self._jog == KEYMAP[k]:
             self._jog_release()
 
     # ====================================================== estado / pantalla
@@ -598,6 +599,7 @@ class Pendant(tk.Tk):
 
     def _estop(self):
         self.estop = True
+        self.enabled = False
         self.worker.clear()
         self._jog_release()
         self._set_sp(SP_DEFAULT, quiet=True)
@@ -653,7 +655,7 @@ class Pendant(tk.Tk):
             self.alarm("STOP activo: pulsa RESET (F3).")
             return False
         if not self.enabled:
-            self.alarm("JOG: habilitación no pulsada (mantén ESPACIO).")
+            self.alarm("JOG: pendant no habilitado (pulsa ESPACIO).")
             return False
         if not self._need_robot():
             return False
@@ -689,7 +691,7 @@ class Pendant(tk.Tk):
             return
         if self.worker.pending() <= 1:
             ax, s = self._jog
-            cmd = self._jog_cmd(ax, s, CONT_STEP)
+            cmd = self._jog_cmd(ax, s, CONT_STEP_WORLD if self.coord == "WORLD" and ax < 3 else CONT_STEP)
             self.worker.submit(self.robot.run, cmd, False, label=f"> {cmd}")
         self._jog_job = self.after(CONT_PERIOD_MS, self._cont_tick)
 
