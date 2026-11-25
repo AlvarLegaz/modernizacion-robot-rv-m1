@@ -20,7 +20,7 @@ Software didáctico de Festo para aprender robótica en celdas virtuales antes d
 - No aplica (manual).
 
 ## Limitaciones
-- Fuente no citable en su forma actual. Lo que dice sobre el RV-M1 y MRL **no** se ha podido respaldar con una fuente citable: ni keibel2002konzeption ni freund1994towards mencionan el RV-M1 ni MRL; patrao2025understanding usa COSIMIR Industrial 4.1 con un RV-2AJ y MELFA BASIC IV.
+- Fuente no citable en su forma actual. Lo que dice sobre el RV-M1 y MRL **no** se ha podido respaldar con una fuente citable: ni keibel2002konzeption ni freund1994towards mencionan el RV-M1 ni MRL (Keibel cita una vez un manual Movemaster de Mitsubishi, [Ele97], sobre ejes adicionales, §6.3, p. 116, sin relación con la simulación del RV-M1; matiz del verificador, ronda 4); patrao2025understanding usa COSIMIR Industrial 4.1 con un RV-2AJ y MELFA BASIC IV.
 
 ## Relación con nuestro trabajo
 - Qué aprovechamos: **riesgo de novedad alto** que se tiene en cuenta en `huecos.md` §6 aunque no se cite: existía un emulador comercial de la controladora del RV-M1 que interpretaba su lenguaje MRL. Para el artículo, COSIMIR se cita a través de fuentes citables (freund1994towards, keibel2002konzeption) sin afirmar lo específico del RV-M1; si Álvar o la biblioteca consiguen el manual oficial (Festo, nº 526501), se puede añadir como literatura gris.

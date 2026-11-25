@@ -35,4 +35,9 @@ Las soluciones comerciales de programación y simulación suelen estar ligadas a
 - En qué nos diferenciamos: nuestro flujo automático es el contrario (del robot real a la sombra, leyendo `WH`), y el modelo no publica estado en el real; medimos la coherencia del emulador con la controladora real, la fidelidad física y la observabilidad. Ellos no leen el estado ni miden nada.
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
-- "an ability to send data to the robot in real time" (p. 502)
+- "send data to the robot in real time" (p. 502). El verificador (ronda 4) confirmó este fragmento; el arranque "an ability to" no se pudo comprobar literalmente y se retira.
+
+## Notas desde la línea revision-v4 (2026-11-25)
+- Cita acortada al fragmento confirmado (verificador, ronda 4, punto 5).
+- Revisión v4, N4-1: el flujo automático es solo modelo → robot. Con el criterio de Barbie (ninguno / físico → digital / ambos) **no encaja en ninguno de los tres niveles**; en la matriz pasa a "fuera de los tres niveles (flujo automático solo digital → físico)".
+- Este trabajo es el que cita JRobot como otro sistema para el RV-M1; ver la ficha de pista calderon2002jrobot.

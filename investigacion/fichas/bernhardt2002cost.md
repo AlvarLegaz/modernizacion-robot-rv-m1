@@ -30,4 +30,8 @@ Reducir costes en planificación, puesta en marcha y mantenimiento de líneas co
 - En qué nos diferenciamos: (1) la D/U-M1 no tiene software de controladora reutilizable: el emulador se escribe desde el manual y se contrasta con la controladora real; (2) se publica la **coherencia medida** frente a la controladora real con un protocolo declarado y separada de la fidelidad física; RRS, en lo leído, afirma la exactitud sin cifras.
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
-- "The only successful approach consists in using the original controller software." (§3.1)
+- "The only successful approach consists in using the original controller software." (§3.1). Confirmada como **literal** por `verificador-referencias` en el PDF de las actas (ronda 4) (revisión v4, N4-6).
+
+## Notas desde la línea revision-v4 (2026-11-25)
+- Verificador, ronda 4, punto 6: en §5 hay dos frases distintas: la afirmación de resultado ("a highly accurate simulation technology for robot controllers has been achieved") y una de requisito ("This can only be achieved through a high accuracy in the simulation"). Cuando se cite que "afirman una simulación muy exacta", se refiere a la primera.
+- Contraste con cifras de la misma vía (RRS), fuera de esta fuente: industrialrobot2006csr (nota de prensa técnica: 1,2 % en tiempos de ciclo en una prueba en ABB) y placzek2018testing (trayectoria simulada con RCS frente al robot real, solo en figuras).

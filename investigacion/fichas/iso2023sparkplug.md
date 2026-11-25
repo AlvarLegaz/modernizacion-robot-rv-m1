@@ -8,8 +8,12 @@
 - **Línea:** revision-v1 (normas)
 
 ## Qué se usa de la norma
-- Alcance (ISO): define la estructura y los requisitos de implementación de clientes MQTT conformes con Sparkplug (nodos *edge* y aplicaciones *host*).
-- Según la documentación de Eclipse Kura (fuente secundaria): el nodo *edge* registra al conectar una última voluntad con un certificado de muerte (NDEATH), que el broker publica si vence el *keep alive*; el primer mensaje de la sesión es el de nacimiento (NBIRTH); un número de secuencia de nacimiento/muerte (bdSeq) empareja cada NDEATH con su NBIRTH, y la aplicación marca los datos como obsoletos (STALE). El número de secuencia por mensaje (`seq`) no se ha comprobado [POR VERIFICAR en el texto normativo].
+- Alcance (ISO, ficha de catálogo): define la estructura y los requisitos de implementación de clientes MQTT conformes con Sparkplug (nodos *edge* y aplicaciones *host*).
+- Según la especificación de Eclipse Sparkplug 3.0.0 (fuente primaria leída; detalle en la nota revision-v2):
+  - §2.4: los certificados de muerte del nodo se registran siempre en el CONNECT como mensaje de última voluntad (NDEATH).
+  - §4.2.1: el NBIRTH debe llevar la métrica `bdSeq`, igual a la del Will del CONNECT, que empieza en 0 y aumenta en cada CONNECT; así se empareja cada NDEATH con su NBIRTH. El NDEATH solo lleva `bdSeq`.
+  - §4.2.1: `seq` vale 0 en el NBIRTH y aumenta en uno en cada NDATA, volviendo a 0 tras 255 (rango deducido de esa regla; el texto no dice "0–255").
+- No se usa nada que solo venga de Eclipse Kura (p. ej., el marcado STALE en la aplicación). No se ha comprobado que el texto de ISO/IEC 20237 coincida con el de Eclipse 3.0.0. (Cuerpo actualizado en revision-v4, menor N4-8.)
 
 ## Notas desde la línea revision-v2 (2026-11-25): lectura de la especificación de Eclipse
 - Se ha leído como fuente primaria la especificación de Eclipse Sparkplug 3.0.0 (https://sparkplug.eclipse.org/specification/version/3.0/documents/sparkplug-specification-3.0.0.pdf; leída la primera parte del PDF, hasta el carácter 100 000 de unos 311 000). Sustituye a la documentación secundaria de Kura en lo siguiente (revisión v2, menor N10):

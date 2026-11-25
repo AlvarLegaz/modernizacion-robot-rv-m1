@@ -16,7 +16,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 - Software: simulador 3D (OpenGL en Visual Basic) con cinemática directa e inversa geométrica (avisos de singularidad o fuera de alcance), trayectorias (Lagrange, Bézier, B-spline, Hermite, etc.), cámara opcional.
 - ¿Mantiene la controladora original? sí (conexión por puerto serie a la controladora).
 - Comunicación / protocolo: serie (RS-232) con opción TEST de conexión; TCP/IP entre simuladores en cadena cliente/servidor (se envían ángulos articulares); control desde móvil por página HDML.
-- Gemelo digital: visualización en paralelo, en lazo abierto (el brazo real se mueve a la par que el modelo CAD porque ambos ejecutan las mismas órdenes; el usuario elige si manda el robot o el simulador al conectar). No se recoge lectura del estado del robot [POR VERIFICAR releyendo el PDF]. Clasificación corregida en las rondas revision-v2 y revision-v3; ver notas al final.
+- Gemelo digital: modelo que gobierna el robot (las operaciones del usuario en el simulador mueven a la vez el modelo CAD y, si está conectado, el robot real); al conectar, puede leer la pose actual del robot para ajustar el modelo; no se describe lectura del estado durante la ejecución. Clasificación corregida tras releer el PDF en la ronda revision-v4; ver notas al final.
 - Seguridad en la capa de comunicación: no indicado.
 
 ## Evaluación
@@ -28,7 +28,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 - Observadas: sin métricas; tecnologías hoy obsoletas (VB, HDML, Windows 2000); sin seguridad de red descrita.
 
 ## Relación con nuestro trabajo
-- Qué aprovechamos: es un antecedente cercano (simulador que se ejecuta en paralelo con el robot, en lazo abierto, + red + controladora original vía serie) y su motivación docente (seguridad del alumno, desgaste, acceso remoto).
+- Qué aprovechamos: es un antecedente cercano (simulador que gobierna el robot real por serie, con lectura de la pose solo al conectar, + red + controladora original) y su motivación docente (seguridad del alumno, desgaste, acceso remoto).
 - En qué nos diferenciamos: debemos posicionarnos explícitamente frente a él: MQTT con contrato, Python abierto, gemelo con estado leído del robot, seguridades del pendant y, sobre todo, caracterización medida (latencia, fiabilidad, discrepancia gemelo-robot) que ellos no aportan.
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
@@ -40,3 +40,10 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 
 ## Notas desde la línea revision-v3 (2026-11-25)
 - Revisión v3, menor N3-4: se corrigen en el cuerpo de la ficha las dos líneas que conservaban la clasificación antigua ("Gemelo digital" en Solución y "Qué aprovechamos"). Ya no queda "visualización sincronizada" ni "simulador sincronizado" en la ficha.
+
+## Notas desde la línea revision-v4 (2026-11-25): relectura del PDF (revisión v4, N4-2)
+Releído el PDF de la revista (jstem.org, article/download/1280/1127/3188) mediante extracción resumida. Se resuelve el [POR VERIFICAR] de las notas anteriores:
+- **Dirección del flujo.** El robot real se mueve de forma síncrona con las operaciones del usuario en el simulador cuando está conectado ("The actual robot will move synchronously with the users operations if it is connected to the simulator"). Es decir, el simulador gobierna el robot; no se describe que modelo y robot reciban la misma secuencia de órdenes por separado. Si una pose queda fuera del espacio de trabajo, el simulador avisa y no actualiza ni el modelo ni el robot.
+- **Lectura del robot.** Al conectar, una opción ("Sym Gets Robot Coords") toma las coordenadas actuales del robot y deja el manipulador donde está; la opción TEST comprueba que el robot responde en el puerto elegido. **No se describe la lectura de la posición ni del estado de error durante la ejecución** (no aparecen `WH` ni `ER`).
+- **Emulación de la controladora:** no (sin errores ni tiempos; velocidad y aceleración no implementadas).
+- **Consecuencias.** (1) La frase "ninguno lee el estado del robot" es falsa para Mihali (lee la pose al conectar) y para Świder (descarga posiciones); se sustituye por "ninguno muestra el estado del robot **durante la ejecución**". (2) Como en Świder, el flujo automático es del modelo al robot, así que con el criterio de Barbie queda **fuera de los tres niveles** (revisión v4, N4-1). La lectura puntual al conectar es una inicialización, no un flujo continuo físico → digital. Se corrige la matriz: deja de ser "visualización en paralelo (lazo abierto)" y "la inferencia" desaparece.

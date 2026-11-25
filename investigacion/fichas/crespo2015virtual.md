@@ -31,3 +31,6 @@ Reducir el tiempo de uso del robot físico y la curva de aprendizaje del RV-M1, 
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - No se extrae (lectura en copia no oficial; paginación no anotada).
+
+## Notas desde la línea revision-v4 (2026-11-25)
+- El verificador (rondas 3 y 4) no ha podido leer el texto completo; los dos resúmenes accesibles (research.tec.mx y el registro ISC de la versión ICBL) **no mencionan Denford ni el número de alumnos**. Una nueva búsqueda del PDF en esta ronda tampoco lo encontró. Por tanto, hasta que alguien lea el PDF de ScienceDirect, en `estado_del_arte.md`, `huecos.md` y la matriz se escribe **solo lo del resumen**: modelo 3D con las especificaciones del robot real, *joystick* por articulación, secuencias guardadas en un fichero que se transfiere al robot real, A* y menos tiempo en el equipo físico; evaluación con alumnos de carácter cualitativo. Se retiran "software de Denford" y "sin tamaño de muestra" de los textos de síntesis. Lo anotado arriba en Solución y Evaluación (Denford, sin tamaño de muestra) queda como lectura no verificada de la copia de ResearchGate [POR VERIFICAR en el PDF].

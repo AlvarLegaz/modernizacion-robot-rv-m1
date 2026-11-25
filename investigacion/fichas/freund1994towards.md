@@ -31,3 +31,7 @@ Simulación realista de celdas robóticas industriales (robots, AGV, cintas, sen
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - "a versatile message-based interface" (resumen) — usar como paráfrasis.
+
+## Notas desde la línea revision-v4 (2026-11-25)
+- Revisión v4, N4-7, y verificador, ronda 4, punto 4: solo se ha leído el resumen. A esta clave solo se le atribuye lo del resumen (simulación realista de celdas con una controladora industrial integrada mediante una interfaz de mensajes). Que sea el "origen" de COSIMIR lo dice keibel2002konzeption, no Freund: en los textos se escribe "trabajo de la misma línea de Dortmund [@freund1994towards; @keibel2002konzeption]". Sigue en reserva, fuera del artículo.
+- "Coherencia medida de un emulador abierto" en "En qué nos diferenciamos" queda sustituido por "medida con protocolo declarado de un emulador reconstruido desde el manual, con el error descompuesto" ("abierto" se retira como diferenciador; ver calderon2002jrobot).

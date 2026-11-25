@@ -1,8 +1,8 @@
 # Konzeption und Realisierung eines integrierten Moduls zur Simulation und Steuerung von Kinematiksystemen
 
 - **Clave:** keibel2002konzeption
-- **Referencia:** Keibel, A. (2002). Konzeption und Realisierung eines integrierten Moduls zur Simulation und Steuerung von Kinematiksystemen. Tesis doctoral, Fakultät für Elektrotechnik und Informationstechnik, Universität Dortmund. [POR VERIFICAR el año de catálogo: el documento indica 2002 y defensa oral el 23/04/2003]
-- **DOI/URL:** sin DOI. https://eldorado.tu-dortmund.de/bitstream/2003/2823/1/Keibelunt.pdf (repositorio Eldorado de la TU Dortmund)
+- **Referencia:** Keibel, A. (2003). Konzeption und Realisierung eines integrierten Moduls zur Simulation und Steuerung von Kinematiksystemen. Tesis doctoral, Fakultät für Elektrotechnik und Informationstechnik, Universität Dortmund. (Año corregido por el verificador, ronda 4: registro de Eldorado con dc.date.issued 2003-08-13 y defensa el 23/04/2003; la portada imprime "Dortmund 2002". La clave conserva "2002".)
+- **DOI/URL:** 10.17877/DE290R-5278 (según el registro de Eldorado; resolución no comprobada). https://eldorado.tu-dortmund.de/bitstream/2003/2823/1/Keibelunt.pdf (repositorio Eldorado de la TU Dortmund)
 - **Tipo:** tesis (doctoral; director E. Freund)
 - **Leído:** texto completo en cuatro bloques (índice, cap. 5, cap. 6, cap. 8–9 y bibliografía), mediante extracción resumida; no literal en todas las partes.
 - **Línea:** revision-v3 (controladoras virtuales, R/VRC, COSIMIR, RRS)
@@ -14,7 +14,7 @@ Diseñar un módulo universal y escalable de control de robots que funcione igua
 - Equipo o robot: módulo genérico; robots reales acoplados: un Manutec r2 modificado (enlace Transputer) y un Reis RV16L (cap. 8, pp. 144 y 148).
 - ¿Mantiene la controladora original? no en los robots reales acoplados: la R/VRC **es** la controladora. En simulación, el objetivo es que la controladora simulada se pueda **intercambiar por una de tiempo real sin cambiar el sistema de simulación** (cap. 5.1, p. 44).
 - Comunicación / protocolo: en modo VRC, el simulador llama a la controladora y cada llamada ejecuta un ciclo de control (p. 43); en modo real, la controladora corre de forma asíncrona y guarda los cambios hasta la siguiente llamada (p. 44). Referencia la interfaz RRS (1992–1993) y la especificación VRC de RRS-II (proyecto desde 1998, dirigido por Fraunhofer IPK).
-- Lenguajes: intérprete IRDATA que cubre casi toda la norma; IRL como ejemplo. Menciona detalles de MELFA BASIC (eventos, contador de vueltas) y el Mitsubishi RV-2AJ (cap. 5.3). **No** menciona el RV-M1, el Movemaster ni su lenguaje MRL.
+- Lenguajes: intérprete IRDATA que cubre casi toda la norma; IRL como ejemplo. Menciona detalles de MELFA BASIC (eventos, contador de vueltas) y el Mitsubishi RV-2AJ (cap. 5.3). **No** menciona el RV-M1 ni su lenguaje MRL; sí cita una vez un manual Movemaster de Mitsubishi ([Ele97], 1997) en §6.3 (p. 116), sobre ejes adicionales como controles de eje individual (matiz del verificador, ronda 4).
 - Mezcla de componentes simulados y reales en la misma celda (cap. 5.3.8, p. 55).
 - Gemelo digital: modelo con controladora emulada intercambiable por la real.
 - Seguridad en la capa de comunicación: no indicado.
@@ -32,4 +32,8 @@ Diseñar un módulo universal y escalable de control de robots que funcione igua
 - En qué nos diferenciamos: no se reivindica emular la controladora ni la intercambiabilidad. Medimos la coherencia del emulador frente a una controladora real cerrada (D/U-M1) con un protocolo declarado (parámetros congelados, programas de evaluación distintos de los de ajuste) y la separamos de la fidelidad física.
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
-- "Die Qualität der Simulation zeigt sich in den möglichst kleinen Differenzen zum realen System." (cap. 6, p. 93) — 14 palabras.
+- "Die Qualität der Simulation zeigt sich in den möglichst kleinen Differenzen zum realen System." (cap. 6, p. 93) — 14 palabras. Confirmada como literal por `verificador-referencias` (ronda 4) (revisión v4, N4-6).
+
+## Notas desde la línea revision-v4 (2026-11-25)
+- Año 2003 y DOI aplicados en la cabecera; matiz del manual Movemaster en "Lenguajes" (verificador, ronda 4, puntos 3 y 8).
+- Revisión v4, N4-3: la exactitud frente al real no es "sin cifras": Keibel da un orden de magnitud ("pocos por ciento", cap. 9) **sin protocolo ni datos**. Así se escribe en `huecos.md` y `estado_del_arte.md`.
