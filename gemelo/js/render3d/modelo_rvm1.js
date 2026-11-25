@@ -8,16 +8,19 @@ import * as THREE from '../../lib/three.module.min.js';
 
 // ------------------------------------------------------------------ aspecto (mm, colores). AFINAR con fotos del robot.
 export const ASPECTO = {
+  // Referencia: fotos del robot real (la amarillenta manda en los colores). Carcasas marfil cálido satinado.
   colores: {
-    crema: 0xe8e3d3,          // carcasas (marfil/crema claro)
-    tapa: 0x3b3f45,           // tapas y motores (gris oscuro)
-    base: 0x17181a,           // base negra
-    aluminio: 0xb9bdc1,       // dedos de la pinza
-    goma: 0x222325
+    crema: 0xf0e4bb,          // carcasas (marfil/crema amarillento cálido)
+    tapa: 0x4b4e53,           // anillos, tornillería y motores (gris oscuro)
+    base: 0xb3aa92,           // placa y pedestal (beige grisáceo, algo más oscuro que las carcasas)
+    aluminio: 0x2a2b2e,       // dedos de la pinza (negros)
+    goma: 0x16171a,           // pinza, cable y pies (negro)
+    texto: 0x2b2e33
   },
-  base: { largo: 260, ancho: 220, alto: 55, centroX: -10, radio: 10 },           // caja baja; centroX = centro de la caja respecto al eje J1
-  cintura: { radio: 80, alto: 50 },                                                 // tambor giratorio sobre la base
-  hombro: { largo: 140, ancho: 150, retroceso: 20, placa: 20, motorRadio: 36, motorLargo: 95 }, // cuerpo del hombro y motor de J2
+  // base en dos niveles: placa inferior cuadrada + pedestal prismático alto con cajetín de conectores atrás
+  base: { largo: 270, ancho: 250, alto: 125, centroX: 0, radio: 10, placaAlto: 20, pedLargo: 190, pedAncho: 190, caja: { largo: 44, alto: 78, ancho: 100 } },
+  cintura: { radio: 84, alto: 24 },                                                 // anillo de la cintura (gris oscuro) sobre el pedestal
+  hombro: { largo: 150, ancho: 150, retroceso: 30, placa: 20, motorRadio: 36, motorLargo: 95, tambor: 56 }, // carcasa del hombro; tambor = tapa redonda lateral grande
   brazo: { ancho: 62, alto: 80, coladera: 60, tapaInset: 10 },                     // sección rectangular; coladera = prolongación tras el hombro
   motorCodo: { radio: 30, largo: 70 },                                             // motor de J3 en la cola del brazo
   antebrazo: { ancho: 48, alto: 56, cola: 45 },
@@ -25,7 +28,8 @@ export const ASPECTO = {
   muneca: { radio: 27, ancho: 64 },
   brida: { radio: 22 },
   pinza: { cuerpoLargo: 48, cuerpoAlto: 46, cuerpoAncho: 74, dedoAncho: 20, dedoGrosor: 8, carrera: 26 },
-  etiqueta: 'MOVEMASTER EX'
+  cable: { vueltas: 16, radioEspira: 9, grosor: 2.6 },                              // cable rizado negro del hombro a la base
+  rotulos: { brazo: 'MOVEMASTER', brazoEx: 'EX', hombro: 'MITSUBISHI' }          // texto plano, sin logotipos
 };
 
 const RAD = Math.PI / 180;
@@ -61,22 +65,43 @@ function malla(geo, mat, x, y, z) {
   return m;
 }
 
-function texturaEtiqueta(texto) {
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 128;
+// Rótulo de texto plano (fondo transparente, tipografía neutra): partes = [[texto, '#color'], ...] en una línea
+function texturaRotulo(partes, ancho, alto, fuente) {
+  const c = document.createElement('canvas'); c.width = ancho; c.height = alto;
   const x = c.getContext('2d');
-  x.fillStyle = '#17181a'; x.fillRect(0, 0, c.width, c.height);
-  x.fillStyle = '#e9e6dc'; x.font = 'bold 78px "Helvetica Neue", Arial, sans-serif';
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(texto, c.width / 2, c.height / 2 + 4);
+  x.font = fuente; x.textBaseline = 'middle'; x.textAlign = 'left';
+  const total = partes.reduce((s, p) => s + x.measureText(p[0]).width, 0);
+  let px = (ancho - total) / 2;
+  for (const [txt, col] of partes) { x.fillStyle = col; x.fillText(txt, px, alto / 2 + 2); px += x.measureText(txt).width; }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
+}
+// plano con un rótulo, mirando hacia +Z local (para -Z se gira 180° sobre Y)
+function planoRotulo(tex, w, h) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+  m.castShadow = false; m.receiveShadow = false; m.renderOrder = 1;
+  return m;
+}
+// cable rizado: espiral de radio r alrededor de una línea central (puntos de control), tubo negro
+function cableRizado(puntos, vueltas, r, grosor) {
+  const centro = new THREE.CatmullRomCurve3(puntos.map((p) => new THREE.Vector3(...p)));
+  const n = vueltas * 24, pts = [];
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, c = centro.getPoint(u), tg = centro.getTangent(u);
+    const a = new THREE.Vector3().crossVectors(tg, new THREE.Vector3(0, 0, 1)); if (a.lengthSq() < 1e-6) a.set(1, 0, 0); a.normalize();
+    const b = new THREE.Vector3().crossVectors(tg, a).normalize();
+    const th = u * vueltas * Math.PI * 2;
+    pts.push(c.clone().addScaledVector(a, Math.cos(th) * r).addScaledVector(b, Math.sin(th) * r));
+  }
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n, grosor, 6, false);
 }
 
 export function crearModeloRVM1(escena, config, aspecto, opc) {
   opc = opc || {};
   const A = aspecto || ASPECTO, G = config.geometria, C = A.colores;
   const fantasma = !!opc.fantasma;
-  const mat = { crema: material(C.crema, 0.48), tapa: material(C.tapa, 0.5, 0.15), base: material(C.base, 0.6, 0.1), alu: material(C.aluminio, 0.35, 0.8), goma: material(C.goma, 0.9) };
+  // acabado satinado (rugosidad media), no brillante
+  const mat = { crema: material(C.crema, 0.62), tapa: material(C.tapa, 0.6, 0.1), base: material(C.base, 0.7), alu: material(C.aluminio, 0.5, 0.1), goma: material(C.goma, 0.8) };
   if (fantasma) for (const k of Object.keys(mat)) {
     const m = mat[k];
     m.transparent = true; m.opacity = 0.32; m.depthWrite = false;
@@ -87,22 +112,30 @@ export function crearModeloRVM1(escena, config, aspecto, opc) {
   raiz.scale.setScalar(0.001);            // mm → m
   escena.add(raiz);
 
-  // ---------------- base fija (negra) con la etiqueta
+  // ---------------- base fija en dos niveles: placa inferior cuadrada y pedestal prismático con cajetín trasero de conectores
   const B = A.base;
-  const base = malla(cajaR(B.largo, B.alto, B.ancho, B.radio), mat.base, B.centroX, B.alto / 2, 0);
-  if (!fantasma) raiz.add(base);
-  const placa = new THREE.Mesh(new THREE.PlaneGeometry(B.ancho * 0.78, B.alto * 0.36), new THREE.MeshStandardMaterial({ map: texturaEtiqueta(A.etiqueta), roughness: 0.5 }));
-  placa.rotation.y = Math.PI / 2;
-  placa.position.set(base.position.x + B.largo / 2 + 0.6, B.alto * 0.5, 0);
-  if (!fantasma) raiz.add(placa);
-  // pies de goma
-  if (!fantasma) for (const sx of [-1, 1]) for (const sz of [-1, 1]) raiz.add(malla(cil(10, 4, 'y'), mat.goma, base.position.x + sx * (B.largo / 2 - 18), 2, sz * (B.ancho / 2 - 18)));
+  if (!fantasma) {
+    raiz.add(malla(cajaR(B.largo, B.placaAlto, B.ancho, 8), mat.base, B.centroX, B.placaAlto / 2, 0));
+    const altoPed = B.alto - B.placaAlto;
+    raiz.add(malla(cajaR(B.pedLargo, altoPed, B.pedAncho, 14), mat.base, B.centroX, B.placaAlto + altoPed / 2, 0));
+    const cj = B.caja;                                                                // cajetín de conectores (detrás, lado -X)
+    const xcj = B.centroX - B.pedLargo / 2 - cj.largo / 2 + 6, ycj = B.placaAlto + cj.alto / 2 + 6;
+    raiz.add(malla(cajaR(cj.largo, cj.alto, cj.ancho, 6), mat.base, xcj, ycj, 0));
+    for (const sz of [-1, 1]) {                                                       // conectores (cilindros negros)
+      raiz.add(malla(cil(9, 10, 'x', 16), mat.goma, xcj - cj.largo / 2 - 3, ycj + 10, sz * 26));
+      raiz.add(malla(cil(6, 10, 'x', 16), mat.tapa, xcj - cj.largo / 2 - 3, ycj - 16, sz * 26));
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {                             // tornillos de la placa y pies de goma
+      raiz.add(malla(cil(7, 3, 'y', 12), mat.tapa, B.centroX + sx * (B.largo / 2 - 16), B.placaAlto + 1, sz * (B.ancho / 2 - 16)));
+      raiz.add(malla(cil(10, 4, 'y'), mat.goma, B.centroX + sx * (B.largo / 2 - 18), 2, sz * (B.ancho / 2 - 18)));
+    }
+  }
 
-  // ---------------- J1: cintura
+  // ---------------- J1: cintura (anillo gris oscuro sobre el pedestal)
   const j1 = new THREE.Group(); j1.position.y = B.alto; raiz.add(j1);
   const CI = A.cintura;
-  j1.add(malla(cil(CI.radio, CI.alto, 'y', 48), mat.crema, 0, CI.alto / 2, 0));
-  j1.add(malla(cil(CI.radio + 2, 6, 'y', 48), mat.tapa, 0, 3, 0));                      // junta oscura con la base
+  j1.add(malla(cil(CI.radio, CI.alto, 'y', 48), mat.tapa, 0, CI.alto / 2, 0));
+  j1.add(malla(cil(CI.radio - 8, 6, 'y', 48), mat.crema, 0, CI.alto + 3, 0));            // asiento de la carcasa del hombro
 
   // cuerpo del hombro: columna crema bajo el eje J2 y horquilla con dos placas
   const H = A.hombro, hEje = G.altura_hombro - B.alto;                                    // altura del eje J2 sobre la cintura
@@ -115,7 +148,23 @@ export function crearModeloRVM1(escena, config, aspecto, opc) {
     const zc = sz * (hueco / 2 + H.placa / 2);
     j1.add(malla(cajaR(H.largo * 0.8, libre + 6, H.placa, 10), mat.crema, -H.retroceso * 0.5, hEje - libre / 2 - 3, zc));
     j1.add(malla(cil(40, H.placa, 'z'), mat.crema, 0, hEje, zc));
-    j1.add(malla(cil(24, 4, 'z'), mat.tapa, 0, hEje, sz * (hueco / 2 + H.placa + 2)));   // tapa del eje
+    // tambor: tapa lateral redonda grande en el eje del hombro (aro gris oscuro y tapa crema)
+    const zt = sz * (hueco / 2 + H.placa);
+    j1.add(malla(cil(H.tambor + 3, 4, 'z', 48), mat.tapa, 0, hEje, zt + sz * 2));
+    j1.add(malla(cil(H.tambor, 10, 'z', 48), mat.crema, 0, hEje, zt + sz * 7));
+    j1.add(malla(cil(18, 3, 'z', 24), mat.tapa, 0, hEje, zt + sz * 13));
+  }
+  // «MITSUBISHI» pequeño en el cuerpo del hombro, junto al tambor (texto plano)
+  const texMit = texturaRotulo([[A.rotulos.hombro, '#c8102e']], 512, 64, '700 44px "Helvetica Neue", Arial, sans-serif');
+  for (const sz of [-1, 1]) {
+    const r = planoRotulo(texMit, 60, 7.5); r.position.set(-H.retroceso - H.largo * 0.27, CI.alto + altoCol * 0.55, sz * (H.ancho / 2 + 0.8));
+    if (sz < 0) r.rotation.y = Math.PI; j1.add(r);
+  }
+  // cable rizado negro: baja por detrás del hombro hasta el cajetín de la base (gira con la cintura)
+  if (!fantasma) {
+    const xc = -H.largo / 2 - H.retroceso - 6, CB = A.cable;
+    const cable = malla(cableRizado([[xc, CI.alto + altoCol * 0.35, 20], [xc - 22, CI.alto - 10, 24], [xc - 34, -50, 20], [-B.pedLargo / 2 - B.caja.largo - 6, -50, 26]], CB.vueltas, CB.radioEspira, CB.grosor), mat.goma);
+    j1.add(cable);
   }
   // motor de J2 (horizontal, detrás del hombro, lado +Z) y su tapa trasera
   j1.add(malla(cil(H.motorRadio, H.motorLargo, 'z'), mat.tapa, -H.largo / 2 - H.retroceso + 10, CI.alto + altoCol * 0.62, H.ancho / 2 - H.motorLargo / 2 + 10));
@@ -126,9 +175,12 @@ export function crearModeloRVM1(escena, config, aspecto, opc) {
   const Lb = G.brazo;
   j2.add(malla(cajaR(Lb + BR.coladera, BR.alto, BR.ancho, 12), mat.crema, (Lb - BR.coladera) / 2, 0, 0));
   j2.add(malla(cil(BR.alto / 2, BR.ancho, 'z'), mat.crema, Lb, 0, 0));                  // extremo redondeado del codo
-  for (const sz of [-1, 1]) {                                                             // tapas laterales grises
-    j2.add(malla(cajaR(Lb - 70, BR.alto - 2 * BR.tapaInset, 3, 6), mat.tapa, Lb / 2 + 5, 0, sz * (BR.ancho / 2 + 1)));
-    j2.add(malla(cil(20, 3, 'z'), mat.tapa, Lb, 0, sz * (BR.ancho / 2 + 1.5)));
+  // «MOVEMASTER EX» a lo largo del lateral del brazo, cerca del codo (texto plano; EX en azul)
+  const texBrazo = texturaRotulo([[A.rotulos.brazo + ' ', '#2b2e33'], [A.rotulos.brazoEx, '#1f4fb4']], 1024, 96, '800 76px "Helvetica Neue", Arial, sans-serif');
+  for (const sz of [-1, 1]) {
+    j2.add(malla(cil(20, 3, 'z'), mat.tapa, Lb, 0, sz * (BR.ancho / 2 + 1.5)));       // tapa del codo
+    const r = planoRotulo(texBrazo, 150, 14); r.position.set(Lb * 0.6, 0, sz * (BR.ancho / 2 + 1.2));
+    if (sz < 0) r.rotation.y = Math.PI; j2.add(r);
   }
   const MC = A.motorCodo;                                                                 // motor de J3 en la cola del brazo
   j2.add(malla(cil(MC.radio, MC.largo, 'z'), mat.tapa, -BR.coladera + 12, 0, 0));
@@ -158,7 +210,7 @@ export function crearModeloRVM1(escena, config, aspecto, opc) {
 
   // pinza de dos dedos: cuerpo y dedos (se abren a lo largo de Z local)
   const P = A.pinza;
-  j5.add(malla(cajaR(P.cuerpoLargo, P.cuerpoAlto, P.cuerpoAncho, 6), mat.tapa, dB + P.cuerpoLargo / 2, 0, 0));
+  j5.add(malla(cajaR(P.cuerpoLargo, P.cuerpoAlto, P.cuerpoAncho, 6), mat.goma, dB + P.cuerpoLargo / 2, 0, 0));                  // pinza: caja negra
   const largoDedo = Math.max(20, G.herramienta_defecto - P.cuerpoLargo);
   const dedos = [-1, 1].map((sz) => {
     const d = new THREE.Group();

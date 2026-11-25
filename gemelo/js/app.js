@@ -11,6 +11,7 @@
 import { crearEscena } from './render3d/escena.js';
 import { crearModeloRVM1 } from './render3d/modelo_rvm1.js';
 import { crearEjes } from './render3d/ejes.js';
+import { crearObjetos } from './render3d/objetos.js';
 import { crearPendant } from './interfaz/pendant.js';
 import { crearBarra } from './interfaz/barra.js';
 import { crearEnlaceLocal, crearEnlaceMqtt, crearEnlaceEspejo } from './interfaz/enlaces.js';
@@ -78,7 +79,22 @@ const escena = crearEscena(vista, { vistaInicial, preservar: parametros.has('cap
 const robot = crearModeloRVM1(escena.escena, CFG);
 const fantasma = crearModeloRVM1(escena.escena, CFG, undefined, { fantasma: true });
 fantasma.visible = false;
-crearEjes(escena.THREE, escena.escena, { largo: 0.3 });   // referencia visual X (rojo), Y (verde), Z (azul) en el origen de la base
+crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
+// escena de prácticas: cubo y mesita (modelo headless en modelo/mundo.js; aquí solo se dibuja)
+const mundo = R.mundo.crearMundo({ config: CFG, escena: R.escena });
+const objetos = crearObjetos(escena.THREE, escena.escena, R.escena);
+document.getElementById('btn-cubo').addEventListener('click', () => { mundo.recolocar(); escena.pedir(); });
+const avisoEl = document.getElementById('aviso-colision');
+let avisoT = 0;
+const NOMBRES = { brazo: 'el brazo', antebrazo: 'el antebrazo', mano: 'la mano', dedos: 'la pinza', cubo: 'el cubo', mesa: 'la mesa', mesita: 'la mesita', base: 'la base' };
+function avisarColision(piezas) {       // solo advertencia: no detiene el robot ni genera error de la controladora
+  const txt = NOMBRES[piezas[0]] + ' con ' + NOMBRES[piezas[1]];
+  avisoEl.querySelector('span').textContent = txt;
+  avisoEl.classList.add('on'); clearTimeout(avisoT);
+  if (!parametros.has('colision')) avisoT = setTimeout(() => avisoEl.classList.remove('on'), 800);      // ?colision=1 (capturas): el aviso se queda
+  pendant.alarm('COLISIÓN: ' + txt + ' (el robot no se detiene).');
+  registro.ev('colision', { piezas });
+}   // referencia visual X (rojo), Y (verde), Z (azul) en el origen de la base
 document.getElementById('btn-vista').addEventListener('click', () => escena.vistaInicial());
 const leyenda = document.getElementById('leyenda3d');
 
@@ -206,6 +222,7 @@ setInterval(() => {
   const dt = Math.min(1000, t - tPrev); tPrev = t;
   ctrl.avanzar(dt);
   if (pasarela && modo !== 'sincronizado') pasarela.tick();
+  if (modo !== 'sincronizado') for (const c of mundo.paso(dt, ctrl.estado()).nuevas) avisarColision(c.piezas);
 }, 15);
 
 const aperturaReal = (o) => (o.actuadores && o.actuadores.pinza === 'cerrada' ? 0 : 1);
@@ -222,7 +239,7 @@ escena.alAntesDeRender(() => {
       : 'REAL ' + observador.idReal + (o.valida ? '' : ' (sin NT)') + (o.fueraDeLimites ? ' · fuera de límites del gemelo' : '') + ' · hace ' + Math.round(o.edad_ms) + ' ms',
     clase: o && o.pose && !o.fueraDeLimites ? '' : 'rojo' };
   } else {
-    if (robot.actualizar(e)) escena.pedir();
+    if (robot.actualizar(Object.assign({}, e, { apertura: mundo.aperturaVisible(e.apertura) }))) escena.pedir();
     if (modo === 'sombra') {
       const vis = !!(o && o.q);
       if (fantasma.visible !== vis) { fantasma.visible = vis; escena.pedir(); }
@@ -233,6 +250,7 @@ escena.alAntesDeRender(() => {
       clase: d && !o.fueraDeLimites ? '' : 'rojo' };
     }
   }
+  if (objetos.actualizar(mundo.estado())) escena.pedir();
   pendant.ponerInfoModo(info);
   pendant.actualizar();
   const q = modo === 'sincronizado' && o && o.q ? o.q : e.q;
@@ -251,6 +269,13 @@ if (parametros.has('demo')) {
   ['MJ -60,5,-10,0,0', 'HE 2', 'MJ 30,0,0,0,0', 'SP 2'].forEach((l) => ctrl.enviar(l));
   ctrl.avanzar(10000);
 }
+// ?practica=1 (capturas): el cubo en la pinza sobre la mesita; ?colision=1: además, la mano baja contra la mesa (aviso fijo)
+if (parametros.has('practica') || parametros.has('colision')) {
+  ['NT', 'SP 9', 'GO', 'MP 260,-150,90,-90,0', 'MP 260,-150,4.5,-90,0', 'GC', 'MP 260,-150,100,-90,0', 'MP 260,150,100,-90,0'].forEach((l) => ctrl.enviar(l));
+  if (parametros.has('colision')) ['MP 330,0,60,-90,0', 'MP 330,0,-40,-90,0'].forEach((l) => ctrl.enviar(l));
+  else ['MP 260,150,44.5,-90,0'].forEach((l) => ctrl.enviar(l));
+  for (let i = 0; i < 3000; i++) { ctrl.avanzar(10); for (const c of mundo.paso(10, ctrl.estado()).nuevas) avisarColision(c.piezas); }
+}
 // ?fantasma=1 (solo capturas): fantasma desplazado para enseñar el modo SOMBRA sin robot real
 if (parametros.has('fantasma')) {
   const obs = R.observadorReal.crearObservadorReal({ idReal: '01', estadoGemelo: () => ctrl.estado(), modo: () => 'sombra' });
@@ -260,7 +285,7 @@ if (parametros.has('fantasma')) {
 }
 
 // para depurar desde la consola
-window.gemelo = { ctrl, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
+window.gemelo = { ctrl, mundo, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
 // ?medir=1 (pruebas de diseño): anota en <body data-medida> si la página o el pendant desbordan
 if (parametros.has('medir')) {

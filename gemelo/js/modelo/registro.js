@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   const nodo = typeof module !== 'undefined' && module.exports;
-  const EVENTOS = ['cmd_tx', 'cmd_rx', 'ack_tx', 'ack_rx', 'serie_tx', 'serie_rx', 'pos', 'estado', 'nota'];
+  const EVENTOS = ['cmd_tx', 'cmd_rx', 'ack_tx', 'ack_rx', 'serie_tx', 'serie_rx', 'pos', 'estado', 'nota', 'colision'];
 
   function monoPorDefecto() {
     if (typeof performance !== 'undefined' && performance.now) return Math.round(performance.now() * 1e6);

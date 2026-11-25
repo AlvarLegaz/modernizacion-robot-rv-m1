@@ -58,12 +58,28 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+## Escena de prácticas: cubo, mesita y colisiones
+
+Sobre la mesa hay un **cubo naranja de 25 mm** y una **mesita azul de 100 × 100 × 40 mm**, alcanzables con la pinza vertical (P = −90°). Posiciones y tolerancias en `js/modelo/config_escena.js` (coordenadas del robot en mm, Z = 0 en la cara superior de la mesa: cubo en X 260, Y −150; mesita en X 260, Y 150). El estado vive en el modelo headless `js/modelo/mundo.js`, así que funciona igual por MQTT desde Python; `js/render3d/objetos.js` solo lo dibuja.
+
+- **Coger:** `GC` (o `MO n,C`) con el TCP a menos de 10 mm del centro del cubo en el plano y ±12 mm en vertical (el TCP queda 8 mm por debajo del centro del cubo): el cubo queda sujeto y se mueve con la pinza.
+- **Soltar:** `GO` y el cubo cae sobre lo que tenga debajo (mesa, mesita o el suelo si está fuera de la mesa).
+- **Recolocar:** botón «Recolocar cubo» en la vista 3D (`window.gemelo.mundo.recolocar()`).
+- **Colisiones (solo advertencia):** cápsulas por eslabón (brazo, antebrazo, mano, dedos) y el cubo agarrado contra la mesa, la mesita, la base (antebrazo, mano y dedos) y el cubo suelto (salvo los dedos). Al chocar, la vista 3D se tiñe de rojo 0,8 s con el rótulo **COLISIÓN**, sale en la línea de alarma del pendant y se anota en el JSONL como evento `colision` con las piezas (`{"piezas":["mano","mesa"]}`). **No detiene el robot ni genera error de la controladora.** No se repite mientras dure el contacto: vuelve a avisar al separarse y chocar otra vez.
+
+Parámetros de URL para capturas: `?practica=1` (cubo dejado sobre la mesita) y `?colision=1` (aviso fijo tras bajar la mano contra la mesa).
+
+## Modelo 3D
+
+Procedural en three.js, con el aspecto parametrizado en `ASPECTO` (`js/render3d/modelo_rvm1.js`), a partir de fotos del robot real (no se suben al repositorio): carcasas marfil amarillento satinado, base en dos niveles (placa y pedestal con cajetín trasero de conectores), anillo de la cintura gris oscuro, tambor lateral en el hombro, cable rizado negro, pinza negra tipo caja y rótulos de texto plano «MOVEMASTER EX» y «MITSUBISHI» (sin logotipos). Las longitudes cinemáticas salen de `config_rvm1.js`. La nave de taller de fondo está en `js/render3d/nave.js` y los ejes X/Y/Z en `js/render3d/ejes.js`.
+
 ## Teach pendant
 
 Mismo diseño y comportamiento que `codigo/rvm1_pendant.py`: barra MANUAL/STOP · JOINT/WORLD · STEP/CONT · SP · REF, línea de alarma, X Y Z P R, seta STOP software enclavada hasta RESET, COORD, STEP/CONT, INCR, −%/+%, jog con rótulos `−X (J1)`, WORLD bloqueado sin referenciar, J4/J5 `art.` en WORLD, SP 2 al conectar y aviso de override desde SP 6. Se añade:
 
 - **F1 HOME, F2 RESET, F3 ABRIR, F4 CERRAR, F5 HE n, F6 MO n** y la lista de puntos (−/+ para elegir n o tocar la línea).
-- **Habilitación (3 posiciones):** botón ENABLE que hay que mantener con un dedo mientras se hace jog con otro (Pointer Events multitáctil). En escritorio vale mantener la barra espaciadora. Al soltar se detiene el jog. MO también exige habilitación; HOME no (como en el pendant Python).
+- **Habilitación (ENABLE conmutado):** simplificación didáctica. Se pulsa una vez (botón táctil o barra espaciadora) para habilitar —LED y botón en verde con «HABILITADO»— y otra para deshabilitar; no hay que mantenerlo. Se deshabilita solo con STOP, al perder la conexión y al ocultar la página o cambiar de pestaña. **En un pendant real el dispositivo de habilitación es de tres posiciones y se mantiene pulsado.** MO también exige habilitación; HOME no (como en el pendant Python).
+- **Jog:** incrementos STEP de 0,1, 1, 5 y 10 (PEQ/MED/GRA/MUY). En CONT, X/Y/Z avanzan 5 mm por tick (200 ms) y los ejes articulares 2°.
 - **Destino** (barra de conexión): *Local* (texto RV-M1 directo a la controladora emulada, como el pendant Python por RS-232C), *MQTT gemelo* (contrato) o *MQTT REAL* (pide confirmación, marca el pendant en rojo y muestra un aviso permanente).
 - Con destino MQTT, el contrato no tiene HE/MO: los puntos se guardan en el propio pendant (`localStorage`) con la última `posicion/mundo` válida y "ir" se hace con `mover_pose`. Si se quiere HE/MO real por MQTT, hay que añadir dos comandos al contrato (propuesta abajo).
 

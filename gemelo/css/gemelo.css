@@ -45,6 +45,12 @@ button { font-family: inherit; }
 #vista3d canvas { display: block; position: absolute; inset: 0; }
 .btn-vista { position: absolute; top: 10px; right: 10px; z-index: 2; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 22px; border: 0;
   background: rgba(21,23,26,.78); color: #fff; font-size: 14px; cursor: pointer; backdrop-filter: blur(4px); }
+.btn-cubo { right: auto; left: 10px; }
+.aviso-colision { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; pointer-events: none;
+  background: rgba(214, 30, 30, .38); color: #fff; text-align: center; opacity: 0; transition: opacity .25s; }
+.aviso-colision.on { opacity: 1; transition: none; }
+.aviso-colision b { font-size: clamp(32px, 9vw, 84px); letter-spacing: .08em; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.aviso-colision span { font-size: clamp(13px, 2vw, 20px); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
 .leyenda3d { position: absolute; left: 10px; bottom: 8px; z-index: 2; font: 11px var(--mono); color: #39424c; background: rgba(255,255,255,.55); padding: 2px 6px; border-radius: 4px; pointer-events: none; white-space: nowrap; }
 .zona-pendant { min-height: 0; min-width: 0; padding: 8px; display: flex; container-type: size; container-name: pendant; background: var(--desk); }
 .aviso-movil { display: none; }

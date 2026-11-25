@@ -1,4 +1,4 @@
-// Prueba de la interfaz en Chrome (opcional; no forma parte de `node --test`): habilitación multitáctil, jog, STOP, WORLD, HE/MO.
+// Prueba de la interfaz en Chrome (opcional; no forma parte de `node --test`): ENABLE conmutado, jog, STOP, WORLD, HE/MO.
 // Requiere puppeteer-core instalado FUERA del repositorio y Chrome:
 //   cd /tmp/deps && npm install puppeteer-core@23
 //   (en gemelo/) python3 -m http.server 8765 --bind 127.0.0.1 &
@@ -34,40 +34,39 @@ const paso = (t) => { ok++; console.log('ok', ok, '-', t); };
   // jog sin habilitación
   const jp1 = await centro('.pd-jogk[data-eje="0"][data-signo="1"]');
   await toque('touchStart', [jp1]); await toque('touchEnd', []);
-  assert.match(await alarma(), /habilitación/); paso('jog sin ENABLE: rechazado con alarma');
+  assert.match(await alarma(), /no habilitado/); paso('jog sin ENABLE: rechazado con alarma');
   assert.equal((await est()).q[0], 0);
 
-  // ENABLE con un dedo y jog con otro (STEP 1°)
-  const en = await centro('.pd-enable');
-  await toque('touchStart', [{ ...en, id: 1 }]);
-  assert.equal(await pag.$eval('.pd-enable', (e) => e.classList.contains('on')), true); paso('ENABLE mantenido enciende el LED');
-  await toque('touchStart', [{ ...en, id: 1 }, { ...jp1, id: 2 }]);
-  await toque('touchEnd', []);
+  // ENABLE conmuta: una pulsación habilita, otra deshabilita (no hay que mantenerlo)
+  const habilitado = async (v) => { const on = await pag.$eval('.pd-enable', (e) => e.classList.contains('on')); if (on !== v) await pag.click('.pd-enable'); };
+  await pag.click('.pd-enable');
+  assert.equal(await pag.$eval('.pd-enable', (e) => e.classList.contains('on')), true);
+  assert.match(await pag.$eval('.pd-enable', (e) => e.textContent), /HABILITADO/); paso('ENABLE (una pulsación) habilita: LED y botón en verde con HABILITADO');
+  await toque('touchStart', [jp1]); await toque('touchEnd', []);
   await espera(800);
-  assert.ok(Math.abs((await est()).q[0] - 1) < 1e-6, 'J1 +1°'); paso('multitáctil: ENABLE + jog +J1 mueve 1° (STEP)');
+  assert.ok(Math.abs((await est()).q[0] - 1) < 1e-6, 'J1 +1°'); paso('ENABLE habilitado + jog +J1 mueve 1° (STEP) sin mantener nada');
 
-  // modo CONT: al soltar ENABLE se para el jog
+  // modo CONT: al deshabilitar (segunda pulsación) se para el jog
   await pag.click('.pd-fn .pd-key:nth-child(2)');               // STEP → CONT
-  await toque('touchStart', [{ ...en, id: 1 }]);
-  await toque('touchStart', [{ ...en, id: 1 }, { ...jp1, id: 2 }]);
+  await toque('touchStart', [jp1]);
   await espera(900);
   const qMedio = (await est()).q[0];
   assert.ok(qMedio > 2, 'avanza en continuo: ' + qMedio);
-  // suelta solo el dedo de ENABLE (el del jog sigue): CDP no sabe levantar un único dedo, así que se despacha su pointerup
-  await pag.evaluate(() => { const id = [...window.gemelo.pendant.estado.enabledPunteros][0]; document.querySelector('.pd-enable').dispatchEvent(new PointerEvent('pointerup', { pointerId: id, bubbles: true })); });
+  await pag.click('.pd-enable');                                 // deshabilita
   await espera(700);
   const q1 = (await est()).q[0];
   await espera(700);
-  assert.equal((await est()).q[0], q1, 'parado tras soltar ENABLE');
+  assert.equal((await est()).q[0], q1, 'parado tras deshabilitar');
   await toque('touchEnd', []);
-  paso('CONT: soltar ENABLE detiene el jog');
+  paso('CONT: deshabilitar ENABLE detiene el jog');
   await pag.click('.pd-fn .pd-key:nth-child(2)');               // vuelve a STEP
 
   // ESPACIO + tecla Q en escritorio
   const qAntes = (await est()).q[0];
-  await pag.keyboard.down(' '); await pag.keyboard.down('q'); await pag.keyboard.up('q'); await pag.keyboard.up(' ');
+  await pag.keyboard.press(' ');                                 // ESPACIO conmuta: habilita
+  await pag.keyboard.down('q'); await pag.keyboard.up('q');
   await espera(600);
-  assert.ok(Math.abs((await est()).q[0] - qAntes - 1) < 1e-6); paso('ESPACIO + Q: jog +J1 con teclado');
+  assert.ok(Math.abs((await est()).q[0] - qAntes - 1) < 1e-6); paso('ESPACIO (habilita) + Q: jog +J1 con teclado');
 
   // WORLD bloqueado sin referenciar
   await pag.click('.pd-fn .pd-key:nth-child(1)');
@@ -86,7 +85,7 @@ const paso = (t) => { ok++; console.log('ok', ok, '-', t); };
   // jog WORLD −Z 1 mm
   const z0 = (await est()).pose.z;
   const jz = await centro('.pd-jogk[data-eje="2"][data-signo="-1"]');
-  await toque('touchStart', [{ ...en, id: 1 }]); await toque('touchStart', [{ ...en, id: 1 }, { ...jz, id: 2 }]);
+  await habilitado(true); await toque('touchStart', [jz]);
   await toque('touchEnd', []);
   await espera(800);
   assert.ok(Math.abs((await est()).pose.z - (z0 - 1)) < 1e-6); paso('WORLD −Z: DS 0,0,-1');
@@ -103,16 +102,17 @@ const paso = (t) => { ok++; console.log('ok', ok, '-', t); };
   const p1 = (await est()).pose;
   await pag.evaluate(() => window.gemelo.ctrl.enviar('DJ 1,20'));
   await espera(1500);
+  await habilitado(false);
   await pag.click('.pd-fk .pd-fkey:nth-child(6)');
-  assert.match(await alarma(), /MO: habilitación/); paso('MO sin ENABLE: rechazado');
-  await pag.keyboard.down(' '); await pag.click('.pd-fk .pd-fkey:nth-child(6)'); await pag.keyboard.up(' ');
+  assert.match(await alarma(), /MO: pendant no habilitado/); paso('MO sin ENABLE: rechazado');
+  await habilitado(true); await pag.click('.pd-fk .pd-fkey:nth-child(6)');
   await espera(2500);
   assert.ok(Math.abs((await est()).pose.x - p1.x) < 1e-6); paso('MO 1 con ENABLE vuelve al punto');
 
   // STOP enclavado hasta RESET
   await pag.click('.pd-seta');
   assert.match(await pag.$eval('.pd-barra', (e) => e.textContent), /STOP/);
-  await pag.keyboard.down(' '); await pag.keyboard.down('q'); await pag.keyboard.up('q'); await pag.keyboard.up(' ');
+  await habilitado(false); await pag.keyboard.press(' '); await pag.keyboard.down('q'); await pag.keyboard.up('q');
   assert.match(await alarma(), /STOP activo/); paso('STOP enclavado: no deja hacer jog');
   await pag.click('.pd-fk .pd-fkey:nth-child(2)');
   assert.doesNotMatch(await pag.$eval('.pd-barra', (e) => e.textContent), /STOP/); paso('RESET libera el STOP');

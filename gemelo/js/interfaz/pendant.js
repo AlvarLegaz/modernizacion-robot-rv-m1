@@ -1,13 +1,14 @@
 // Teach pendant del gemelo: mismo diseño y comportamiento que codigo/rvm1_pendant.py (carcasa oscura, pantalla clara,
 // barra MANUAL/COORD/STEP/SP/REF, línea de alarma, X Y Z P R, seta STOP software enclavada hasta RESET, COORD, STEP/CONT,
 // INCR, −%/+%, jog −/+ con rótulos estilo FANUC, WORLD bloqueado sin referenciar, J4/J5 "art." en WORLD, SP inicial 2 y
-// aviso desde SP 6). Añade HOME, RESET, pinza, puntos HE/MO y habilitación táctil (ENABLE mantenido + jog con otro dedo).
+// aviso desde SP 6). Añade HOME, RESET, pinza, puntos HE/MO y habilitación táctil (ENABLE conmutado: una pulsación habilita y otra deshabilita).
 //   const p = crearPendant(contenedor);  p.ponerEnlace(enlace);  p.actualizar()  (cada fotograma)
 // Solo lee el estado del enlace; nunca toca la controladora directamente.
 'use strict';
 
-export const INCREMENTS = [['PEQ', 0.1], ['MED', 1.0], ['GRA', 5.0]];
-export const CONT_STEP = 2.0;          // mm o ° por tick en jog continuo
+export const INCREMENTS = [['PEQ', 0.1], ['MED', 1.0], ['GRA', 5.0], ['MUY', 10.0]];
+export const CONT_STEP = 2.0;          // ° por tick en jog continuo articular
+export const CONT_STEP_WORLD = 5.0;    // mm por tick en jog continuo cartesiano (X/Y/Z), más rápido; el periodo y SP mantienen el límite de 1000 mm/s
 export const CONT_PERIOD_MS = 200;
 export const SP_DEFAULT = 2;
 export const SP_WARN = 6;
@@ -20,7 +21,7 @@ export function crearPendant(raiz) {
   // ------------------------------------------------ estado de máquina (como en rvm1_pendant.py)
   const st = {
     coord: 'JOINT', jogmode: 'STEP', incrIdx: 1, sp: SP_DEFAULT, estop: false,
-    enabledPunteros: new Set(), enabledTecla: false, jog: null, jogPuntero: null, contTimer: null,
+    habilitado: false, jog: null, jogPuntero: null, contTimer: null,
     lastEr: null, homed: false, punto: 1, alarma: ''
   };
   let enlace = null;
@@ -98,8 +99,9 @@ export function crearPendant(raiz) {
     }
     jogKeys.push(fila);
   }
-  const kEnable = h('button', 'pd-enable'); kEnable.innerHTML = '<b>ENABLE</b><small>mantener pulsado</small>';
-  kEnable.setAttribute('aria-label', 'Habilitación: mantener pulsado mientras se hace jog');
+  const kEnable = h('button', 'pd-enable'); kEnable.innerHTML = '<b>ENABLE</b><small>pulsar para habilitar</small>';
+  kEnable.setAttribute('aria-label', 'Habilitación: pulsar para habilitar o deshabilitar el jog');
+  kEnable.setAttribute('aria-pressed', 'false');
   lado.appendChild(kEnable);
 
   // ---- softkeys físicas bajo la pantalla
@@ -107,7 +109,7 @@ export function crearPendant(raiz) {
   const fkey = (n, t) => { const b = h('button', 'pd-key pd-fkey'); b.innerHTML = '<small>F' + n + '</small>' + t; fk.appendChild(b); return b; };
   const fHome = fkey(1, 'HOME'), fReset = fkey(2, 'RESET'), fGo = fkey(3, 'ABRIR'), fGc = fkey(4, 'CERRAR'), fHe = fkey(5, 'HE 1'), fMo = fkey(6, 'MO 1');
 
-  caja.appendChild(h('div', 'pd-ayuda', 'Mantén ENABLE (o ESPACIO) = habilitación (3 posiciones) · Jog teclado: Q/A W/S E/D R/F T/G · La parada de emergencia real es la seta física.'));
+  caja.appendChild(h('div', 'pd-ayuda', 'ENABLE (o ESPACIO) = habilitar / deshabilitar · Jog teclado: Q/A W/S E/D R/F T/G · La parada de emergencia real es la seta física.'));
 
   // ------------------------------------------------ utilidades
   function log(msg) {
@@ -120,7 +122,7 @@ export function crearPendant(raiz) {
     alarmaEl.textContent = st.alarma;
     if (msg) log('ALARMA  ' + msg);
   }
-  const enabled = () => st.enabledPunteros.size > 0 || st.enabledTecla;
+  const enabled = () => st.habilitado;
   const needLink = () => { if (!enlace) { alarm('Sin conexión.'); return false; } return true; };
 
   // ------------------------------------------------ funciones (equivalentes a rvm1_pendant.py)
@@ -148,6 +150,7 @@ export function crearPendant(raiz) {
   }
   function estop() {
     st.estop = true;
+    setEnable(false);
     jogRelease();
     if (enlace) enlace.vaciar();
     setSp(SP_DEFAULT, true);
@@ -175,7 +178,7 @@ export function crearPendant(raiz) {
   function irAPunto() {
     if (!needLink()) return;
     if (st.estop) { alarm('STOP activo: pulsa RESET (F2).'); return; }
-    if (!enabled()) { alarm('MO: habilitación no pulsada (mantén ENABLE o ESPACIO).'); return; }
+    if (!enabled()) { alarm('MO: pendant no habilitado (pulsa ENABLE o ESPACIO).'); return; }
     if (!st.homed) { alarm('MO requiere robot referenciado (HOME).'); return; }
     log('> MO ' + st.punto); enlace.irAPunto(st.punto);
   }
@@ -183,7 +186,7 @@ export function crearPendant(raiz) {
   // ------------------------------------------------ jog
   function jogAllowed() {
     if (st.estop) { alarm('STOP activo: pulsa RESET (F2).'); return false; }
-    if (!enabled()) { alarm('JOG: habilitación no pulsada (mantén ENABLE o ESPACIO).'); return false; }
+    if (!enabled()) { alarm('JOG: pendant no habilitado (pulsa ENABLE o ESPACIO).'); return false; }
     if (!needLink()) return false;
     if (st.coord === 'WORLD' && !st.homed) { alarm('WORLD requiere robot referenciado.'); return false; }
     return true;
@@ -208,7 +211,7 @@ export function crearPendant(raiz) {
     if (!st.jog || !enabled() || st.estop || !enlace) return;
     if (enlace.estado().pendientes <= 1) {
       const [ax, s] = st.jog;
-      log('> ' + jogSend(ax, s, CONT_STEP));
+      log('> ' + jogSend(ax, s, st.coord === 'WORLD' && ax < 3 ? CONT_STEP_WORLD : CONT_STEP));
     }
   }
   function jogRelease() {
@@ -222,20 +225,23 @@ export function crearPendant(raiz) {
   }
   function flash(axis, sign, on) { jogKeys[axis][sign < 0 ? 0 : 1].classList.toggle('pulsada', on); }
 
-  function setEnable() {
-    const on = enabled();
-    if (!on) jogRelease();
-    led.classList.toggle('on', on);
-    kEnable.classList.toggle('on', on);
+  // ENABLE conmuta (simplificación didáctica: en un pendant real el dispositivo de habilitación es de tres posiciones y se mantiene pulsado)
+  function setEnable(on) {
+    if (on !== undefined) st.habilitado = !!on;
+    const h = st.habilitado;
+    if (!h) jogRelease();
+    led.classList.toggle('on', h);
+    kEnable.classList.toggle('on', h);
+    kEnable.setAttribute('aria-pressed', h ? 'true' : 'false');
+    kEnable.querySelector('b').textContent = h ? 'HABILITADO' : 'ENABLE';
+    kEnable.querySelector('small').textContent = h ? 'pulsar para deshabilitar' : 'pulsar para habilitar';
   }
 
   // ------------------------------------------------ eventos (Pointer Events multitáctil)
   const sinMenu = (el) => el.addEventListener('contextmenu', (e) => e.preventDefault());
   caja.querySelectorAll('button').forEach(sinMenu);
 
-  kEnable.addEventListener('pointerdown', (e) => { e.preventDefault(); try { kEnable.setPointerCapture(e.pointerId); } catch (x) { /* */ } st.enabledPunteros.add(e.pointerId); setEnable(); });
-  const enableUp = (e) => { if (st.enabledPunteros.delete(e.pointerId)) setEnable(); };
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((t) => kEnable.addEventListener(t, enableUp));
+  kEnable.addEventListener('click', () => setEnable(!st.habilitado));
 
   jogZona.addEventListener('pointerdown', (e) => {
     const b = e.target.closest('.pd-jogk'); if (!b) return;
@@ -268,18 +274,17 @@ export function crearPendant(raiz) {
   window.addEventListener('keydown', (e) => {
     if (enCampo(e)) return;
     const k = e.key.toLowerCase();
-    if (k === ' ') { e.preventDefault(); if (!e.repeat) { st.enabledTecla = true; setEnable(); } return; }
+    if (k === ' ') { e.preventDefault(); if (!e.repeat) setEnable(!st.habilitado); return; }
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (KEYMAP[k] && !st.jog) { const [ax, s] = KEYMAP[k]; if (jogPress(ax, s)) st.jogPuntero = 'tecla:' + k; }
   });
   window.addEventListener('keyup', (e) => {
     if (enCampo(e)) return;
     const k = e.key.toLowerCase();
-    if (k === ' ') { e.preventDefault(); st.enabledTecla = false; setEnable(); return; }
+    if (k === ' ') { e.preventDefault(); return; }
     if (st.jogPuntero === 'tecla:' + k) jogRelease();
   });
-  window.addEventListener('blur', () => { st.enabledTecla = false; st.enabledPunteros.clear(); setEnable(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { st.enabledTecla = false; st.enabledPunteros.clear(); setEnable(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) setEnable(false); });   // al ocultar la página se deshabilita
 
   // ------------------------------------------------ refresco de pantalla (solo si cambia)
   const ultimo = {};
@@ -296,6 +301,7 @@ export function crearPendant(raiz) {
     poner(ovrLbl, 'textContent', 'SP ' + st.sp, 'ol'); clase(ovrLbl, 'ambar', warn);
     poner(sRef, 'textContent', st.homed ? 'REF OK' : 'NO REF', 'sr'); clase(sRef, 'verde', st.homed); clase(sRef, 'rojo', !st.homed);
     const on = !!(e && e.conectado);
+    if (!on && st.habilitado) setEnable(false);                 // al perder la conexión se deshabilita
     poner(sConn, 'textContent', enlace ? (on ? enlace.etiqueta : enlace.etiqueta + ' ?') : 'OFFLINE', 'sn');
     clase(sConn, 'verde', on && enlace.destino !== 'real'); clase(sConn, 'rojo', on && enlace.destino === 'real'); clase(sConn, 'gris', !on);
     poner(sGem, 'textContent', infoModo.etiqueta, 'sg');
