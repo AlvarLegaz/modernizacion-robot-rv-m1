@@ -11,5 +11,13 @@
 - Alcance (ISO): define la estructura y los requisitos de implementación de clientes MQTT conformes con Sparkplug (nodos *edge* y aplicaciones *host*).
 - Según la documentación de Eclipse Kura (fuente secundaria): el nodo *edge* registra al conectar una última voluntad con un certificado de muerte (NDEATH), que el broker publica si vence el *keep alive*; el primer mensaje de la sesión es el de nacimiento (NBIRTH); un número de secuencia de nacimiento/muerte (bdSeq) empareja cada NDEATH con su NBIRTH, y la aplicación marca los datos como obsoletos (STALE). El número de secuencia por mensaje (`seq`) no se ha comprobado [POR VERIFICAR en el texto normativo].
 
+## Notas desde la línea revision-v2 (2026-11-25): lectura de la especificación de Eclipse
+- Se ha leído como fuente primaria la especificación de Eclipse Sparkplug 3.0.0 (https://sparkplug.eclipse.org/specification/version/3.0/documents/sparkplug-specification-3.0.0.pdf; leída la primera parte del PDF, hasta el carácter 100 000 de unos 311 000). Sustituye a la documentación secundaria de Kura en lo siguiente (revisión v2, menor N10):
+  - §2.4: los certificados de muerte "are always registered in the MQTT CONNECT packet as the MQTT Will Message" (texto descriptivo).
+  - §4.2.1, NBIRTH: debe incluir la métrica `bdSeq`, que debe coincidir con la del Will Message del CONNECT y empezar en cero e incrementarse en cada nuevo CONNECT ([tck-id-topics-nbirth-bdseq-included], [-matching], [-increment]).
+  - §4.2.1, NDEATH: solo lleva la métrica `bdSeq` y no lleva número de secuencia.
+  - §4.2.1, NDATA: `seq` aumenta en uno y vuelve a 0 tras 255; en NBIRTH vale 0. El texto no dice literalmente "0–255"; se deduce de esa regla.
+- No se ha comprobado que el texto de ISO/IEC 20237:2023 sea idéntico al de Eclipse 3.0.0; el título de ISO dice "Sparkplug version 3.0". En el artículo conviene citar la norma ISO y decir que se ha consultado la especificación de Eclipse, o citar esta directamente (decisión de `verificador-referencias`).
+
 ## Relación con nuestro trabajo
 - Sparkplug ya resuelve sobre MQTT la detección de caída de nodos (LWT + certificados de muerte) y el estado de sesión. Nuestro `online` con LWT es la versión mínima de esa idea, no una aportación. Se cita para reconocerlo y para justificar por qué no se adopta Sparkplug completo: el contrato necesita semántica de órdenes a un manipulador (ACK en dos fases, caducidad, destino real/gemelo), y Sparkplug está orientado a métricas de dispositivos.

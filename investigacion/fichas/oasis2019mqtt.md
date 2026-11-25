@@ -12,4 +12,11 @@
 - **Will Message y Will Delay Interval (§3.1.2.5, §3.1.3.2.2):** el broker publica la última voluntad al cerrarse la conexión, tras el retardo configurado o al acabar la sesión; no la publica si el cliente se desconecta con DISCONNECT normal o reconecta antes de que venza el retardo.
 
 ## Relación con nuestro trabajo
-- La caducidad del contrato (`ts` en el payload, 500 ms) es una adaptación de la idea de *Message Expiry*: no es un mecanismo nuevo. Se justifica usar `ts` y no la propiedad del protocolo porque el *expiry* solo cubre el tiempo en el broker, no la cola de la placa ni la espera hasta escribir en el RS-232 (el contrato v0.2 comprueba la caducidad al recibir y antes de escribir en la línea serie). El precio es depender de relojes sincronizados (NTP, rechazo con motivo `reloj` si el desfase supera 100 ms).
+- La caducidad del contrato (`ts` en el payload, 500 ms) es una adaptación de la idea de *Message Expiry*: no es un mecanismo nuevo. La justificación de la v2 ("solo cubre el broker, no la cola de la placa") era **incompleta**: como el broker reenvía el intervalo reducido, la placa podría aplicar la caducidad restante con su reloj monótono. Ver la sección siguiente.
+
+## Notas desde la línea revision-v2 (2026-11-25)
+- Corrección pedida en la revisión v2 (menor N1). Razones correctas para usar `ts` en el payload y no el *Message Expiry Interval*:
+  1. **Resolución.** El intervalo es un entero de cuatro bytes en **segundos** (§3.3.2.3.3), así que no puede expresar una caducidad de 500 ms.
+  2. **Tramo publicador → broker.** La norma solo descuenta el tiempo que el mensaje espera en el servidor (el valor reenviado es el recibido menos esa espera); no cubre el tiempo que la orden ha pasado en el cliente ni en la red antes de llegar al broker (por ejemplo, en la cola de un cliente que reconecta).
+  3. **Dependencia de la versión.** Exige que el broker, el cliente y la biblioteca MQTT de la placa hablen MQTT 5; con una biblioteca solo 3.1.1 la propiedad no existe. Enlaza con la elección de la placa, aún abierta.
+- Lo que sí se aprovecha de la norma: como el broker reenvía el intervalo reducido, en la placa se puede combinar con el reloj monótono para la parte broker → ejecución. Se deja como alternativa futura si se fija una placa con MQTT 5; el contrato actual usa `ts` y paga el precio de sincronizar relojes (NTP o `/hora`, rechazo `reloj` por encima de 100 ms).

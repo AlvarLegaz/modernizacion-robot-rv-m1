@@ -33,3 +33,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - No se extrae.
+
+## Notas desde la línea revision-v2 (2026-11-25)
+- Revisión v2, menor N8. Lo que recoge esta ficha es que el brazo "se mueve a la par" que el modelo y que el usuario elige al conectar si manda el robot o el simulador; **no recoge que el simulador lea el estado del robot** (posición o error). Por tanto, la sincronía descrita es en lazo abierto: el modelo y el robot ejecutan las mismas órdenes. Es una inferencia a partir de lo fichado, no una afirmación de la fuente [POR VERIFICAR releyendo el PDF].
+- En la terminología de kritzinger2018digital sería un **modelo digital** que se ejecuta en paralelo, no una sombra. Por eso se excluye de forma explícita de la afirmación "los gemelos sincronizados revisados se alimentan de estado continuo" y se reclasifica en la matriz como "visualización en paralelo (lazo abierto)".
