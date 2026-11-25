@@ -23,6 +23,21 @@ const parametros = new URLSearchParams(location.search);
 
 // ------------------------------------------------------------------ modelo headless
 const ctrl = R.controladora.crearControladora({ config: CFG });
+
+// Puntos HE del gemelo: se guardan en el navegador y se restauran al abrir (con PD n,x,y,z,p,r), para no perderlos al recargar.
+const CLAVE_PUNTOS = 'rvm1.puntos.emulador';
+let firmaPuntos = '';
+try {
+  const guardados = JSON.parse(window.localStorage.getItem(CLAVE_PUNTOS) || '[]');
+  for (const p of guardados) ctrl.enviar('PD ' + [p.n, p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].join(','));
+  firmaPuntos = JSON.stringify(guardados);
+} catch (e) { /* sin almacenamiento o dato corrupto: se empieza sin puntos */ }
+function guardarPuntos() {
+  const ps = ctrl.estado().posiciones, firma = JSON.stringify(ps);
+  if (firma === firmaPuntos) return;
+  firmaPuntos = firma;
+  try { window.localStorage.setItem(CLAVE_PUNTOS, firma); } catch (e) { /* sin almacenamiento */ }
+}
 const registro = R.registro.crearRegistro({ nodo: 'gemelo', destino: 'gemelo' });
 let pasarela = null, transporte = null, cliente = null, idActual = null;
 let modo = 'emulador', observador = null;
@@ -103,7 +118,7 @@ try {                                           // recupera el último programa 
   const n = window.localStorage.getItem('rvm1.programa.actual'), g = n && almacenProg.obtener(n);
   if (g) { programa.cargar(g.lineas, g.ciclico); progActual = g; }
 } catch (e) { /* sin almacenamiento */ }
-const gestor = crearGestorProgramas({ P: PR, parsear: R.controladora.parsear, almacen: almacenProg, integrados: [CICLO_CUBO], alUsar: usarPrograma });
+const gestor = crearGestorProgramas({ P: PR, parsear: R.controladora.parsear, almacen: almacenProg, integrados: [CICLO_CUBO], alUsar: usarPrograma, puntos: () => pendant.puntos() });
 gestor.mostrar(progActual);
 document.getElementById('btn-progs').addEventListener('click', () => gestor.abrir());
 btnProg.addEventListener('click', () => {
@@ -253,6 +268,7 @@ setInterval(() => {
   const t = performance.now();
   const dt = Math.min(1000, t - tPrev); tPrev = t;
   ctrl.avanzar(dt);
+  guardarPuntos();
   if (pasarela && modo !== 'sincronizado') pasarela.tick();
   { const ps = programa.estado(); if (progEraActivo && !ps.activo && ps.motivoParada && ps.motivoParada.startsWith('error')) pendant.alarm('Programa «' + progActual.nombre + '» detenido: ' + ps.motivoParada + '. RESET (F2) para seguir.'); progEraActivo = ps.activo; }
   if (programa.estado().activo) { if (pendant.estado.estop || modo === 'sincronizado') programa.parar('STOP o modo sincronizado'); else programa.tick(); }

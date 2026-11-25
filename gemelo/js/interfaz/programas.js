@@ -2,6 +2,7 @@
 // Solo interfaz: la validación, el JSON y el almacén están en js/modelo/programa.js; aquí no hay reglas del robot.
 //   const g = crearGestorProgramas({ P, parsear, almacen, integrados, alUsar(prog), alAviso(texto) });
 //   g.abrir()   g.actual() → { nombre, descripcion, ciclico, lineas }   g.usar(prog)
+// opc.puntos() (opcional) → [{ n, pose:{x,y,z,p,r} }]: el botón «Desde puntos» escribe un programa con un MP por punto.
 // Un programa es { nombre, descripcion, ciclico, lineas:[…] }. Los integrados no se pueden borrar ni sobrescribir (se guardan como copia).
 
 export function crearGestorProgramas(opc) {
@@ -29,7 +30,7 @@ export function crearGestorProgramas(opc) {
 
   const botones = el('div', 'pg-botones');
   const b = (t, cls) => { const x = el('button', cls || '', t); x.type = 'button'; botones.append(x); return x; };
-  const bNuevo = b('Nuevo'), bGuardar = b('Guardar'), bBorrar = b('Eliminar'), bVal = b('Validar');
+  const bNuevo = b('Nuevo'), bPuntos = b('Desde puntos'), bGuardar = b('Guardar'), bBorrar = b('Eliminar'), bVal = b('Validar');
   const bImp = b('Importar JSON…'), bExp = b('Exportar JSON'), bExpT = b('Exportar todos');
   const bUsar = b('Usar este programa', 'pg-primario');
   const fichero = el('input'); fichero.type = 'file'; fichero.accept = '.json,application/json'; fichero.hidden = true; fichero.multiple = true;
@@ -72,6 +73,18 @@ export function crearGestorProgramas(opc) {
   bNuevo.addEventListener('click', () => {
     mostrar({ nombre: nombreLibre('Programa nuevo'), descripcion: '', ciclico: false, lineas: ['NT', 'SP 3', 'GO', '# MP x,y,z,p,r  (mm y grados)', 'MP 300,0,150,-90,0'] });
     nombreCargado = null; sel.value = ''; bBorrar.disabled = true; aviso('Programa nuevo: escribe las líneas y pulsa Guardar.');
+  });
+  // Programa a partir de los puntos del pendant (HE n). Se usa MP con las coordenadas, no MO n, para que el programa
+  // no dependa de la memoria de posiciones de la controladora y funcione igual en otro equipo o en el robot real.
+  bPuntos.addEventListener('click', () => {
+    const ps = opc.puntos ? opc.puntos() : [];
+    if (!ps.length) { aviso('No hay puntos: guárdalos antes con HE en el pendant.', true); return; }
+    const f = (v) => String(Math.round(v * 10) / 10);
+    const lineas = ['# Generado desde los puntos del pendant. Añade GO (abrir) y GC (cerrar) donde toque.', 'NT', 'SP 3'];
+    for (const p of ps) lineas.push('MP ' + [p.pose.x, p.pose.y, p.pose.z, p.pose.p, p.pose.r].map(f).join(',') + '   # punto ' + p.n);
+    mostrar({ nombre: nombreLibre('Desde puntos'), descripcion: ps.length + ' puntos del pendant', ciclico: false, lineas });
+    nombreCargado = null; sel.value = ''; bBorrar.disabled = true;
+    aviso('Programa creado con ' + ps.length + ' puntos. Revísalo, añade la pinza y pulsa Guardar.');
   });
   bVal.addEventListener('click', () => { const p = validarEditor(); if (p) aviso('Correcto: ' + p.lineas.length + ' líneas válidas.'); });
   bGuardar.addEventListener('click', () => {

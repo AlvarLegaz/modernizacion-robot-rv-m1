@@ -75,6 +75,8 @@ El botón **▶ …** (arriba a la izquierda de la vista 3D) ejecuta el programa
 
 - **Integrado: «Ciclo del cubo».** Recoloca el cubo y, en bucle: `NT`, `SP 5`, `GO`; coge el cubo de la mesa y lo deja en la mesita; `NT` (origen de referencia); lo coge de la mesita y lo deja en su sitio de la mesa; `NT`. No se puede borrar ni sobrescribir: se edita y se guarda con otro nombre.
 - **Escribir y guardar.** *Nuevo*, escribir las líneas, *Validar* (comprueba cada línea con el analizador de la controladora y señala la que falla) y *Guardar*. Los programas se guardan en el navegador (`localStorage`, clave `rvm1.programas`): no viajan entre equipos; para eso está el JSON.
+- **Desde puntos.** Escribe un programa con un `MP x,y,z,p,r` por cada punto guardado con HE en el pendant (no usa `MO n`, para que funcione en otro equipo o en el robot real). Hay que añadir a mano `GO`/`GC` donde toque abrir o cerrar la pinza.
+- **Puntos.** Los puntos HE del emulador se guardan en el navegador (`rvm1.puntos.emulador`) y se restauran al abrir con `PD`, así que no se pierden al recargar.
 - **Cargar.** Se elige en la lista y *Usar este programa* lo deja listo para el botón ▶. El último usado se recuerda en ese navegador.
 - **Exportar / importar JSON.** *Exportar JSON* baja el programa del editor (`programa-<nombre>.json`) y *Exportar todos* baja la lista completa (`programas-rvm1.json`). *Importar JSON…* admite uno o varios ficheros, con un programa, una lista o `{programas:[…]}`; rechaza con el motivo los que no validan y renombra los que coinciden con uno integrado.
 - **Se detiene** con el mismo botón, con STOP del pendant o si la controladora da error (la alarma del pendant dice cuál). Un programa no cíclico acaba solo.

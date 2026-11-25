@@ -414,5 +414,5 @@ export function crearPendant(raiz) {
   // modo del gemelo (EMULADOR / SOMBRA / SINCRONIZADO) y línea de error gemelo–real; lo fija app.js
   function ponerInfoModo(i) { infoModo = Object.assign({ etiqueta: 'EMULADOR', linea: '', clase: '' }, i || {}); }
 
-  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, get estado() { return st; } };
+  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, get estado() { return st; }, puntos: () => (enlace ? enlace.estado().puntos : []) };
 }
