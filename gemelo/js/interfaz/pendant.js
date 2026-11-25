@@ -141,6 +141,9 @@ export function crearPendant(raiz) {
   function home() {
     if (!needLink()) return;
     if (st.estop) { alarm('STOP activo: pulsa RESET (F2).'); return; }
+    // Como en la D/U-M1: en error la controladora ignora todo salvo RS, ER y WH, así que NT no haría nada.
+    const er = enlace.estado().error;
+    if (er) { alarm('HOME ignorado: hay ERROR MODO ' + (er === 1 ? 'I' : 'II') + '. Pulsa RESET (F2) y luego HOME (F1).'); return; }
     log('> NT  (homing)');
     enlace.home();
   }
