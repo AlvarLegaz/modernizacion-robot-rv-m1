@@ -69,17 +69,30 @@ Sobre la mesa hay un **cubo naranja de 25 mm** y una **mesita azul de 100 × 100
 
 Parámetros de URL para capturas: `?practica=1` (cubo dejado sobre la mesita) y `?colision=1` (aviso fijo tras bajar la mano contra la mesa).
 
-### Preprograma cargado: ciclo del cubo
+### Programas: ejecutar, escribir, guardar, importar y exportar
 
-El botón **▶ Ciclo del cubo** (arriba a la izquierda de la vista 3D) lanza un programa cíclico (`cicloCubo()` en `js/modelo/programa.js`, líneas del lenguaje de la controladora que van a la misma controladora que los comandos del pendant o de MQTT). Antes de empezar recoloca el cubo y, mientras corre, el botón se pone verde («■ Parar ciclo · vuelta N · línea actual»). Se detiene con el mismo botón, con STOP del pendant o si la controladora da error. Cada vuelta:
+El botón **▶ …** (arriba a la izquierda de la vista 3D) ejecuta el programa cargado y **Programas…** abre la ventana de gestión. Un programa es una lista de líneas del lenguaje de la controladora (`NT`, `SP n`, `GO`, `GC`, `MP x,y,z,p,r`, `MJ`, `DJ`, `DS`, `TL`, `HE`, `MO`…) que van a la misma controladora que los comandos del pendant o de MQTT. Las líneas vacías y los comentarios (`#` o `;` hasta el final de la línea) se ignoran.
 
-1. `NT`, `SP 5`, `GO`.
-2. Coge el cubo de la mesa (X 260, Y −150): `MP` a 100 mm, baja a 4,5 mm, `GC`, sube.
-3. Lo deja en la mesita (X 260, Y 150): `MP` a 100 mm, baja a 44,5 mm, `GO`, sube.
-4. `NT` (vuelve al origen de referencia).
-5. Coge el cubo de la mesita, lo deja de nuevo en la mesa en su sitio inicial y vuelve a `NT`. Empieza otra vuelta.
+- **Integrado: «Ciclo del cubo».** Recoloca el cubo y, en bucle: `NT`, `SP 5`, `GO`; coge el cubo de la mesa y lo deja en la mesita; `NT` (origen de referencia); lo coge de la mesita y lo deja en su sitio de la mesa; `NT`. No se puede borrar ni sobrescribir: se edita y se guarda con otro nombre.
+- **Escribir y guardar.** *Nuevo*, escribir las líneas, *Validar* (comprueba cada línea con el analizador de la controladora y señala la que falla) y *Guardar*. Los programas se guardan en el navegador (`localStorage`, clave `rvm1.programas`): no viajan entre equipos; para eso está el JSON.
+- **Cargar.** Se elige en la lista y *Usar este programa* lo deja listo para el botón ▶. El último usado se recuerda en ese navegador.
+- **Exportar / importar JSON.** *Exportar JSON* baja el programa del editor (`programa-<nombre>.json`) y *Exportar todos* baja la lista completa (`programas-rvm1.json`). *Importar JSON…* admite uno o varios ficheros, con un programa, una lista o `{programas:[…]}`; rechaza con el motivo los que no validan y renombra los que coinciden con uno integrado.
+- **Se detiene** con el mismo botón, con STOP del pendant o si la controladora da error (la alarma del pendant dice cuál). Un programa no cíclico acaba solo.
 
-Prueba: `tests/mundo.test.js` (dos vueltas sin errores ni colisiones).
+Formato de intercambio (`formato: "rvm1-programa"`, `version: 1`):
+
+```json
+{
+  "formato": "rvm1-programa",
+  "version": 1,
+  "nombre": "Mi prueba",
+  "descripcion": "Dos puntos y vuelta al origen",
+  "ciclico": false,
+  "lineas": ["NT", "SP 9", "MP 300,0,150,-90,0", "MP 300,100,150,-90,0", "NT"]
+}
+```
+
+Código: `js/modelo/programa.js` (ejecución, validación, JSON y almacén, sin DOM) y `js/interfaz/programas.js` (ventana). Pruebas en `tests/mundo.test.js`. Con `?gestor=1` la página abre la ventana (capturas).
 
 ## Modelo 3D
 

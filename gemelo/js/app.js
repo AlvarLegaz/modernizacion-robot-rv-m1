@@ -12,6 +12,7 @@ import { crearEscena } from './render3d/escena.js';
 import { crearModeloRVM1 } from './render3d/modelo_rvm1.js';
 import { crearEjes } from './render3d/ejes.js';
 import { crearObjetos } from './render3d/objetos.js';
+import { crearGestorProgramas } from './interfaz/programas.js';
 import { crearPendant } from './interfaz/pendant.js';
 import { crearBarra } from './interfaz/barra.js';
 import { crearEnlaceLocal, crearEnlaceMqtt, crearEnlaceEspejo } from './interfaz/enlaces.js';
@@ -84,16 +85,37 @@ crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
 const mundo = R.mundo.crearMundo({ config: CFG, escena: R.escena });
 const objetos = crearObjetos(escena.THREE, escena.escena, R.escena);
 document.getElementById('btn-cubo').addEventListener('click', () => { mundo.recolocar(); escena.pedir(); });
-// preprograma cargado: ciclo del cubo (js/modelo/programa.js). Corre en la controladora local, igual que un programa externo por MQTT.
-const programa = R.programa.crearPrograma({ controladora: ctrl, lineas: R.programa.cicloCubo(R.escena), ciclico: true });
+// programas: el integrado «Ciclo del cubo» y los del usuario (guardados en el navegador, importables y exportables en JSON; ver js/modelo/programa.js)
+const PR = R.programa;
+const CICLO_CUBO = { nombre: 'Ciclo del cubo', descripcion: 'Coge el cubo, lo deja en la mesita, vuelve al origen, lo coge y lo deja en la mesa', ciclico: true, lineas: PR.cicloCubo(R.escena), recolocar: true };
+let almacenProg;
+try { almacenProg = PR.crearAlmacen(window.localStorage); } catch (e) { const mem = {}; almacenProg = PR.crearAlmacen({ getItem: (k) => mem[k] || null, setItem: (k, v) => { mem[k] = v; } }); }
+const programa = PR.crearPrograma({ controladora: ctrl, lineas: CICLO_CUBO.lineas, ciclico: true });
+let progActual = CICLO_CUBO;
 const btnProg = document.getElementById('btn-prog');
+function usarPrograma(p) {
+  if (!programa.cargar(p.lineas, p.ciclico)) return false;
+  progActual = p;
+  try { window.localStorage.setItem('rvm1.programa.actual', p.nombre); } catch (e) { /* sin almacenamiento */ }
+  return true;
+}
+try {                                           // recupera el último programa usado en este navegador
+  const n = window.localStorage.getItem('rvm1.programa.actual'), g = n && almacenProg.obtener(n);
+  if (g) { programa.cargar(g.lineas, g.ciclico); progActual = g; }
+} catch (e) { /* sin almacenamiento */ }
+const gestor = crearGestorProgramas({ P: PR, parsear: R.controladora.parsear, almacen: almacenProg, integrados: [CICLO_CUBO], alUsar: usarPrograma });
+gestor.mostrar(progActual);
+document.getElementById('btn-progs').addEventListener('click', () => gestor.abrir());
 btnProg.addEventListener('click', () => {
   if (programa.estado().activo) { programa.parar('parado por el usuario'); return; }
   if (modo === 'sincronizado') return;
-  if (pendant.estado.estop) { pendant.alarm('STOP activo: pulsa RESET (F2) antes de lanzar el ciclo.'); return; }
+  if (pendant.estado.estop) { pendant.alarm('STOP activo: pulsa RESET (F2) antes de lanzar el programa.'); return; }
   if (ctrl.estado().err) ctrl.enviar('RS');
-  mundo.recolocar(); programa.reiniciarVueltas(); programa.iniciar(); escena.pedir();
+  if (progActual.recolocar) mundo.recolocar();
+  programa.reiniciarVueltas(); programa.iniciar(); escena.pedir();
 });
+let progEraActivo = false;
+if (parametros.has('gestor')) gestor.abrir();     // ?gestor=1 (capturas): abre la ventana de programas
 const avisoEl = document.getElementById('aviso-colision');
 let avisoT = 0;
 const NOMBRES = { brazo: 'el brazo', antebrazo: 'el antebrazo', mano: 'la mano', dedos: 'la pinza', cubo: 'el cubo', mesa: 'la mesa', mesita: 'la mesita', base: 'la base' };
@@ -232,6 +254,7 @@ setInterval(() => {
   const dt = Math.min(1000, t - tPrev); tPrev = t;
   ctrl.avanzar(dt);
   if (pasarela && modo !== 'sincronizado') pasarela.tick();
+  { const ps = programa.estado(); if (progEraActivo && !ps.activo && ps.motivoParada && ps.motivoParada.startsWith('error')) pendant.alarm('Programa «' + progActual.nombre + '» detenido: ' + ps.motivoParada + '. RESET (F2) para seguir.'); progEraActivo = ps.activo; }
   if (programa.estado().activo) { if (pendant.estado.estop || modo === 'sincronizado') programa.parar('STOP o modo sincronizado'); else programa.tick(); }
   if (modo !== 'sincronizado') for (const c of mundo.paso(dt, ctrl.estado()).nuevas) avisarColision(c.piezas);
 }, 15);
@@ -262,7 +285,7 @@ escena.alAntesDeRender(() => {
     }
   }
   if (objetos.actualizar(mundo.estado())) escena.pedir();
-  { const ps = programa.estado(), t = ps.activo ? '■ Parar ciclo · vuelta ' + (ps.vueltas + 1) + ' · ' + ps.linea : '▶ Ciclo del cubo';
+  { const ps = programa.estado(), t = ps.activo ? '■ Parar · ' + progActual.nombre + (ps.vueltas ? ' · vuelta ' + (ps.vueltas + 1) : '') + ' · ' + ps.linea : '▶ ' + progActual.nombre;
     if (btnProg.textContent !== t) { btnProg.textContent = t; btnProg.classList.toggle('on', ps.activo); } }
   pendant.ponerInfoModo(info);
   pendant.actualizar();
@@ -298,7 +321,7 @@ if (parametros.has('fantasma')) {
 }
 
 // para depurar desde la consola
-window.gemelo = { ctrl, mundo, programa, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
+window.gemelo = { ctrl, mundo, programa, gestor, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
 // ?medir=1 (pruebas de diseño): anota en <body data-medida> si la página o el pendant desbordan
 if (parametros.has('medir')) {

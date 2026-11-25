@@ -115,3 +115,34 @@ test('preprograma cíclico: coge el cubo, lo deja en la mesita, vuelve al origen
   assert.equal(colisiones.length, 0, JSON.stringify(colisiones));
   assert.equal(c.estado().err, 0);
 });
+
+test('programas: limpiar, validar, JSON de intercambio y almacén', () => {
+  const P = require('../js/modelo/programa');
+  const { parsear } = require('../js/modelo/controladora');
+  assert.deepEqual(P.limpiar('NT\n\n# comentario\nSP 5 ; velocidad\n  GO  \r\n'), ['NT', 'SP 5', 'GO']);
+  assert.equal(P.validar('NT\nGO', parsear).ok, true);
+  const v = P.validar('NT\nXX 1\n# nada\nSP 99x', parsear);
+  assert.deepEqual(v.errores.map((e) => e.n), [2, 4]);
+  assert.equal(P.validar('# solo comentarios', parsear).ok, false);
+
+  const prog = { nombre: 'Prueba', descripcion: 'd', ciclico: false, lineas: ['NT', 'GO'] };
+  const json = P.aJSON(prog);
+  const d = JSON.parse(json);
+  assert.equal(d.formato, 'rvm1-programa'); assert.equal(d.version, 1);
+  const r = P.deJSON(json, parsear);
+  assert.deepEqual(r.errores, []); assert.deepEqual(r.programas, [prog]);
+  assert.equal(P.deJSON('{no json', parsear).programas.length, 0);
+  assert.match(P.deJSON('{"nombre":"x"}', parsear).errores[0], /falta/);
+  assert.match(P.deJSON(JSON.stringify({ nombre: 'M', lineas: ['NT', 'FOO 1'] }), parsear).errores[0], /línea 2/);
+  assert.match(P.deJSON(JSON.stringify({ formato: 'otro', nombre: 'M', lineas: ['NT'] }), parsear).errores[0], /formato/);
+  const lote = P.deJSON(JSON.stringify({ programas: [prog, { nombre: 'B', lineas: 'NT\nGC' }] }), parsear);
+  assert.equal(lote.programas.length, 2); assert.equal(lote.programas[1].ciclico, true); assert.deepEqual(lote.programas[1].lineas, ['NT', 'GC']);
+
+  const mem = {}; const st = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = v; } };
+  const al = P.crearAlmacen(st);
+  assert.equal(al.listar().length, 0);
+  al.guardar(prog); al.guardar({ nombre: 'B', lineas: ['NT'] }); al.guardar(Object.assign({}, prog, { lineas: ['NT', 'GC'] }));
+  assert.equal(al.listar().length, 2); assert.deepEqual(al.obtener('Prueba').lineas, ['NT', 'GC']);
+  al.borrar('B'); assert.equal(al.listar().length, 1);
+  assert.equal(P.crearAlmacen({ getItem: () => '{roto', setItem() {} }).listar().length, 0, 'JSON roto en el almacén: lista vacía');
+});
