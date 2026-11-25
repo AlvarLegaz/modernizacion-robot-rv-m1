@@ -2,7 +2,7 @@
 
 - **Clave:** barbie2024digital
 - **Referencia:** Barbie, A., Hasselbring, W., Hansen, M. (2024). Digital Twin Prototypes for Supporting Automated Integration Testing of Smart Farming Applications. Symmetry, 16(2), 221.
-- **DOI/URL:** https://doi.org/10.3390/sym16020221 (PDF leído en https://eprints.soton.ac.uk/488801/1/symmetry-16-00221-v2.pdf; preprint relacionado: arXiv:2401.07985; código: https://github.com/cau-se/DigitalTwinPrototypes, Apache 2.0)
+- **DOI/URL:** https://doi.org/10.3390/sym16020221 (PDF leído en https://eprints.soton.ac.uk/488801/1/symmetry-16-00221-v2.pdf; preprint de este artículo: arXiv:2311.05748, "Enabling Automated Integration Testing of Smart Farming Applications via Digital Twin Prototypes" (corregido en revision-v3 según el verificador; arXiv:2401.07985 es otro trabajo, Barbie y Hasselbring, sobre la formalización del DTP, que no está en refs.bib); código: https://github.com/cau-se/DigitalTwinPrototypes, Apache 2.0)
 - **Tipo:** revista
 - **Leído:** texto completo (PDF del repositorio de Southampton)
 - **Línea:** revision-v2 (definición de gemelo y emulación de interfaces de dispositivos)
@@ -27,7 +27,7 @@ Probar de forma automática (integración continua) el software de sistemas embe
 
 ## Relación con nuestro trabajo
 - Qué aprovechamos: es el **concepto publicado** del que el modo `emulador` es una aplicación. Nuestra pasarela habla con la controladora emulada solo por su interfaz de texto (`NT`, `DJ`, `ER`, `WH`…), igual que la placa por RS-232C, así que el software de la pasarela y los clientes no distinguen el gemelo del robot real salvo por el destino. También aporta la lectura de Kritzinger que usamos para nombrar los modos.
-- En qué nos diferenciamos: (1) emulamos la **semántica del intérprete** de una controladora serie de los 80 (ACK `hecho` derivado de `ER`, errores de modo I/II, referencia con `NT`, tiempos según `SP`), no solo el transporte serie; (2) el emulador es también instrumento de medida (modo `sombra`) y medimos su **coherencia** con la controladora y su **fidelidad física** frente a una referencia externa, cosa que Barbie et al. no hacen. **No** se reivindica la idea de emular el dispositivo detrás de la misma interfaz: es suya.
+- En qué nos diferenciamos: medimos la **coherencia** del emulador con la controladora real (con parámetros congelados y programas de evaluación distintos de los de ajuste) y, por separado, su **fidelidad física** frente a una referencia externa, cosa que Barbie et al. no hacen. **No** se reivindica la idea de emular el dispositivo detrás de la misma interfaz (es suya) **ni** la emulación de la semántica de la controladora: la simulación de controladoras industriales con su software o su lenguaje es anterior (bernhardt1995realistic, bernhardt2002cost, keibel2002konzeption) y en el RV-M1 ya se interpretaba parte de su lenguaje (swider2007system, swider2007offline) (revisión v3, mayor 1; corregido en revision-v3).
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - "A digital twin prototype (DTP) is the software prototype of a physical twin." (§2, p. 5)

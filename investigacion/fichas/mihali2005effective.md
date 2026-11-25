@@ -16,7 +16,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 - Software: simulador 3D (OpenGL en Visual Basic) con cinemática directa e inversa geométrica (avisos de singularidad o fuera de alcance), trayectorias (Lagrange, Bézier, B-spline, Hermite, etc.), cámara opcional.
 - ¿Mantiene la controladora original? sí (conexión por puerto serie a la controladora).
 - Comunicación / protocolo: serie (RS-232) con opción TEST de conexión; TCP/IP entre simuladores en cadena cliente/servidor (se envían ángulos articulares); control desde móvil por página HDML.
-- Gemelo digital: visualización sincronizada (el brazo real se mueve a la par que el modelo CAD; el usuario elige si manda el robot o el simulador al conectar).
+- Gemelo digital: visualización en paralelo, en lazo abierto (el brazo real se mueve a la par que el modelo CAD porque ambos ejecutan las mismas órdenes; el usuario elige si manda el robot o el simulador al conectar). No se recoge lectura del estado del robot [POR VERIFICAR releyendo el PDF]. Clasificación corregida en las rondas revision-v2 y revision-v3; ver notas al final.
 - Seguridad en la capa de comunicación: no indicado.
 
 ## Evaluación
@@ -28,7 +28,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 - Observadas: sin métricas; tecnologías hoy obsoletas (VB, HDML, Windows 2000); sin seguridad de red descrita.
 
 ## Relación con nuestro trabajo
-- Qué aprovechamos: es el antecedente más cercano a nuestra idea (simulador sincronizado + red + controladora original vía serie) y su motivación docente (seguridad del alumno, desgaste, acceso remoto).
+- Qué aprovechamos: es un antecedente cercano (simulador que se ejecuta en paralelo con el robot, en lazo abierto, + red + controladora original vía serie) y su motivación docente (seguridad del alumno, desgaste, acceso remoto).
 - En qué nos diferenciamos: debemos posicionarnos explícitamente frente a él: MQTT con contrato, Python abierto, gemelo con estado leído del robot, seguridades del pendant y, sobre todo, caracterización medida (latencia, fiabilidad, discrepancia gemelo-robot) que ellos no aportan.
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
@@ -36,4 +36,7 @@ El coste, la seguridad y el mal uso de manipuladores industriales en universidad
 
 ## Notas desde la línea revision-v2 (2026-11-25)
 - Revisión v2, menor N8. Lo que recoge esta ficha es que el brazo "se mueve a la par" que el modelo y que el usuario elige al conectar si manda el robot o el simulador; **no recoge que el simulador lea el estado del robot** (posición o error). Por tanto, la sincronía descrita es en lazo abierto: el modelo y el robot ejecutan las mismas órdenes. Es una inferencia a partir de lo fichado, no una afirmación de la fuente [POR VERIFICAR releyendo el PDF].
-- En la terminología de kritzinger2018digital sería un **modelo digital** que se ejecuta en paralelo, no una sombra. Por eso se excluye de forma explícita de la afirmación "los gemelos sincronizados revisados se alimentan de estado continuo" y se reclasifica en la matriz como "visualización en paralelo (lazo abierto)".
+- En la terminología de Kritzinger (criterio del flujo de datos según barbie2024digital) sería un **modelo digital** que se ejecuta en paralelo, no una sombra. Por eso se excluye de forma explícita de la afirmación "los gemelos sincronizados revisados se alimentan de estado continuo" y se reclasifica en la matriz como "visualización en paralelo (lazo abierto)".
+
+## Notas desde la línea revision-v3 (2026-11-25)
+- Revisión v3, menor N3-4: se corrigen en el cuerpo de la ficha las dos líneas que conservaban la clasificación antigua ("Gemelo digital" en Solución y "Qué aprovechamos"). Ya no queda "visualización sincronizada" ni "simulador sincronizado" en la ficha.

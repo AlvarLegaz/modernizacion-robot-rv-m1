@@ -4,7 +4,7 @@
 - **Referencia:** ISO/IEC (2023). ISO/IEC 20237:2023 Information technology — Sparkplug® version 3.0. Ed. 1, 18 de octubre de 2023. (Especificación de origen: Eclipse Foundation, Sparkplug 3.0, https://sparkplug.eclipse.org/specification/version/3.0/)
 - **DOI/URL:** https://www.iso.org/standard/86204.html (metadatos leídos en https://committee.iso.org/es/sites/isoorg/contents/data/standard/08/62/86204.html)
 - **Tipo:** norma
-- **Leído:** ficha de catálogo de ISO (alcance) y documentación secundaria de Eclipse Kura sobre Sparkplug. **No se ha leído el texto normativo** (de pago; el PDF de Eclipse redirige a la página del proyecto).
+- **Leído:** ficha de catálogo de ISO (alcance) y, como fuente primaria, el primer tercio de la especificación de Eclipse Sparkplug 3.0.0 (§2.4 y §4.2.1; ronda revision-v2). **No se ha leído el texto de ISO/IEC 20237** (de pago) ni comprobado que coincida con el de Eclipse. La documentación de Eclipse Kura se usó al principio como fuente secundaria y queda sustituida por la especificación en lo que esta cubre. (Cabecera actualizada en revision-v3, menor N3-9.)
 - **Línea:** revision-v1 (normas)
 
 ## Qué se usa de la norma

@@ -15,7 +15,7 @@ Programa ROBO (simulación y programación *off-line* con OpenGL, en Windows), K
 - Equipo o robot: Mitsubishi Movemaster RV-M1 (5 ejes, 1,2 kg).
 - ¿Mantiene la controladora original? sí (comunicación PC–controladora; RS-232 preferente, Centronics también soportado).
 - Comunicación / protocolo: RS-232; servidor propio para control remoto.
-- Gemelo digital: visualización/simulación (no sincronizada como gemelo).
+- Gemelo digital: modelo que gobierna el robot real en lazo abierto (cada cambio del brazo virtual mueve el real, §4.1; sin lectura del estado del robot en lo leído). Corregido en la ronda revision-v3; ver nota al final.
 - Seguridad en la capa de comunicación: no indicado.
 
 ## Evaluación
@@ -28,7 +28,14 @@ Programa ROBO (simulación y programación *off-line* con OpenGL, en Windows), K
 
 ## Relación con nuestro trabajo
 - Qué aprovechamos: precedente directo de control del RV-M1 por RS-232 conservando la controladora, con simulación y uso docente.
-- En qué nos diferenciamos: pub/sub MQTT estandarizado, gemelo sincronizado, *teach pendant* de software, Python multiplataforma y evaluación cuantitativa (latencia, disponibilidad).
+- En qué nos diferenciamos: pub/sub MQTT estandarizado, sombra que lee el estado del real (`WH`), *teach pendant* de software, Python multiplataforma y evaluación cuantitativa (latencia, coherencia del emulador, fidelidad física, observabilidad). No nos diferenciamos en interpretar el lenguaje del robot ni en mover el real desde el modelo: eso ya lo hacían.
 
 ## Citas textuales útiles
 - Ninguna literal registrada.
+
+## Notas desde la línea revision-v3 (2026-11-25)
+Relectura pedida por la revisión v3 (mayor 1), sobre el PDF de delibra (Content/38972), con extracción resumida:
+- **Lenguaje:** el procesador de visualización reconoce solo órdenes seleccionadas de lo que la fuente llama "MELFA BASIC" (resumen). No lista cuáles ni describe la emulación de errores, tiempos o velocidad de la controladora. La programación del modelo virtual es "casi igual" que la del robot real, con funciones aún sin implementar (§1, p. 9).
+- **Enlace en vivo:** cada cambio de la posición del brazo virtual produce el desplazamiento correspondiente del manipulador real (§4.1, p. 10). No se describe la lectura de la posición o del estado del robot durante la simulación; solo la descarga de programas o posiciones desde la controladora en el panel del traductor CAD (§3.1).
+- **Corrección de la clasificación.** La línea "Gemelo digital: visualización/simulación (no sincronizada como gemelo)" queda **sustituida**: es un **modelo que gobierna el robot real en lazo abierto** (flujo automático modelo → robot; ninguno robot → modelo en lo leído). Lo mismo describe el artículo corto swider2007offline (JAMME 20(1–2), p. 502). En "En qué nos diferenciamos", "gemelo sincronizado" se sustituye por "sombra que lee el estado del real (`WH`) y medida de coherencia, fidelidad física y observabilidad".
+- **Consecuencia para A3:** que un simulador del RV-M1 interprete parte de su lenguaje y mueva el robot real en vivo ya está publicado (2007); no es aportación nuestra.
