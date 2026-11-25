@@ -6,22 +6,24 @@ Modernización de un brazo robótico Mitsubishi **Movemaster EX RV-M1** (5 grado
 
 ## Tareas
 
-1. **Reparar el error del homing** (error de modo I) hasta que NT termine sin fallos.
-2. **Probar la teaching box original (T/B-M1)** en sus dos modos de movimiento: articular y cartesiano (XYZ).
-3. **Probar desde el PC por RS-232** con `rvm1_control.py`: comandos, lectura de posición (WH) y de errores (ER).
-4. **Probar el pendant de software** (`rvm1_pendant.py`) con el robot real, conectado directamente al PC.
-5. **Desarrollar la placa de interfaz:** implementar una pasarela basada en ESP32 con comunicación WiFi/MQTT, conversor de niveles RS-232C (MAX3232) y una interfaz de parada eléctrica aislada y supervisada, conectada a la entrada `EXT. EMG. STOP` de la controladora D/U-M1, cuya disponibilidad y comportamiento deberán verificarse en la unidad real. **Requisito indispensable de seguridad:** la placa solo permite el movimiento mientras recibe el **latido** de la aplicación; si falta, abre el circuito de parada por sí misma, sin depender del broker, con fallo seguro en hardware y rearme manual (contrato MQTT, sección 5). No es una función certificada y no sustituye a las setas físicas.
+Casilla marcada = hecha y verificada; sin marcar = pendiente. Se actualiza al cerrar cada tarea (`- [x]`).
+
+- [x] **1.** **Reparar el error del homing** (error de modo I) hasta que NT termine sin fallos.
+- [ ] **2.** **Probar la teaching box original (T/B-M1)** en sus dos modos de movimiento: articular y cartesiano (XYZ).
+- [ ] **3.** **Probar desde el PC por RS-232** con `rvm1_control.py`: comandos, lectura de posición (WH) y de errores (ER).
+- [ ] **4.** **Probar el pendant de software** (`rvm1_pendant.py`) con el robot real, conectado directamente al PC.
+- [ ] **5.** **Desarrollar la placa de interfaz:** implementar una pasarela basada en ESP32 con comunicación WiFi/MQTT, conversor de niveles RS-232C (MAX3232) y una interfaz de parada eléctrica aislada y supervisada, conectada a la entrada `EXT. EMG. STOP` de la controladora D/U-M1, cuya disponibilidad y comportamiento deberán verificarse en la unidad real. **Requisito indispensable de seguridad:** la placa solo permite el movimiento mientras recibe el **latido** de la aplicación; si falta, abre el circuito de parada por sí misma, sin depender del broker, con fallo seguro en hardware y rearme manual (contrato MQTT, sección 5). No es una función certificada y no sustituye a las setas físicas.
 
    ![Arquitectura conceptual de control y parada remota](docu/arquitectura_control_parada_remota.jpg)
 
    *Arquitectura conceptual de la placa: canal de control RS-232C y canal de solicitud de parada eléctrica independiente del intérprete serie. Se mantienen las setas físicas independientes. El STOP remoto por WiFi/MQTT es complementario y no constituye por sí solo una función de seguridad certificada.*
 
-6. **Definir los topics MQTT:** uno para enviar comandos y otros para publicar posición, error y estado, más el topic de **latido** y los estados de seguridad (`permiso`, `parada`, `circuito_parada`).
-7. **Pasar el pendant a MQTT,** para que hable con la placa en vez de con el puerto serie.
-8. **Aprendizaje de puntos:** grabar posiciones y reproducir secuencias.
-9. **Coger y dejar un objeto** con la pinza.
-10. **Validar la parada segura:** medir la latencia del latido y de `stop`, el tiempo de frenado del robot y el tiempo hasta abrir el circuito ante fallos inyectados (WiFi, broker, aplicación, alimentación de la placa).
-11. **Gemelo digital** con los mismos comandos y topics MQTT que el robot real, validado frente a él y usado para formar al alumnado antes de usar el brazo.
+- [x] **6.** **Definir los topics MQTT:** uno para enviar comandos y otros para publicar posición, error y estado, más el topic de **latido** y los estados de seguridad (`permiso`, `parada`, `circuito_parada`). *(contrato v0.5, borrador)*
+- [ ] **7.** **Pasar el pendant a MQTT,** para que hable con la placa en vez de con el puerto serie. *(hecho en el pendant web del gemelo; falta con la placa real)*
+- [ ] **8.** **Aprendizaje de puntos:** grabar posiciones y reproducir secuencias. *(hecho en el gemelo: puntos HE y programas; falta con el robot real)*
+- [ ] **9.** **Coger y dejar un objeto** con la pinza. *(hecho en el gemelo; falta con el robot real)*
+- [ ] **10.** **Validar la parada segura:** medir la latencia del latido y de `stop`, el tiempo de frenado del robot y el tiempo hasta abrir el circuito ante fallos inyectados (WiFi, broker, aplicación, alimentación de la placa).
+- [ ] **11.** **Gemelo digital** con los mismos comandos y topics MQTT que el robot real, validado frente a él y usado para formar al alumnado antes de usar el brazo. *(gemelo hecho; falta validarlo frente al robot real)*
 
 ## Estructura del repositorio
 
