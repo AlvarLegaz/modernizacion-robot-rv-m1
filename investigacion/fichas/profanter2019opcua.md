@@ -18,7 +18,7 @@ Comparar prestaciones y características de los protocolos usados en Industria 4
 - Seguridad en la capa de comunicación: no evaluada; describe el QoS básico de MQTT pero no compara niveles.
 
 ## Evaluación
-- Métricas medidas: RTT medio con carga útil de 2 B (µs), eco en reposo: OPC UA C/S 520; OPC UA Pub/Sub 590; MQTT 584; ROS 618; DDS 726; TCP 250; UDP 241. Con carga de CPU MQTT sube a 912 µs; con carga de red todos superan ~875 µs. MQTT presenta más valores atípicos. Prueba de 500 nodos: OPC UA C/S el más rápido; ROS consumió 60 de 64 GB de RAM; Fast RTPS no pasó de ~100 nodos.
+- Métricas medidas: RTT medio con carga útil de 2 B (µs), eco en reposo: OPC UA C/S 520; OPC UA Pub/Sub 590; MQTT 584; ROS 618; DDS 726; TCP 250; UDP 241. Con carga de CPU MQTT sube a 912 µs; con carga de red todos dan ≥ 875 µs (OPC UA C/S da exactamente 875 µs; corregido el anterior "superan ~875 µs"). MQTT presenta más valores atípicos. Prueba de 500 nodos: OPC UA C/S el más rápido; ROS consumió 60 de 64 GB de RAM; Fast RTPS no pasó de ~100 nodos.
 - Tamaño de la muestra / repeticiones: 5000 peticiones por ensayo, cargas de 2 B a 32 768 B.
 
 ## Limitaciones (declaradas y observadas)
@@ -31,3 +31,6 @@ Comparar prestaciones y características de los protocolos usados en Industria 4
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - no indicado
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 10, y revisión v1, menor 5. "≥ 875 µs" con carga de red. En la síntesis no se cita para decir que MQTT es "competitivo frente a OPC UA": en este banco OPC UA C/S es algo más rápido (520 frente a 584 µs) y MQTT tiene más atípicos; se cita como "diferencias inferiores al milisegundo en LAN".

@@ -28,6 +28,8 @@ docu/
   pendant.png               Captura del pendant en modo simulación
   referencias.md            Manuales y documentación técnica del RV-M1
   contrato_mqtt.md / .pdf   Contrato MQTT (topics real/gemelo, comandos, ACK, estado, posición)
+gemelo/                     Gemelo digital web (3D + teach pendant, contrato MQTT como rvm1/gemelo/<id>/); ver gemelo/README.md
+broker/                     Servidor MQTT del aula (Mosquitto, usuarios y ACL) y web del gemelo; ver broker/README.md
 investigacion/              Estado del arte: búsquedas, fichas, matriz, huecos
 referencias/refs.bib        Bibliografía verificada
 experimentos/               Protocolos y datos crudos (inmutables)

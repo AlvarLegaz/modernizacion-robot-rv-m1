@@ -19,7 +19,8 @@ Proyecto en cuatro fases: sensores y comunicación inalámbrica; servidor web y 
 - Seguridad en la capa de comunicación: tratada de forma breve (preprint).
 
 ## Evaluación
-- Métricas: en el preprint, precisión del sensor ~1 cm y alcance 5 m; no se mide latencia ni distancia de parada.
+- Métricas atribuibles al artículo ASEE (`[@alasti2021turning]`): ninguna en lo leído (solo el resumen).
+- Métricas del **preprint arXiv:2102.12649** (otra publicación del mismo autor; **no** atribuibles a `[@alasti2021turning]`): precisión del sensor ~1 cm y alcance ~5 m; no se mide latencia ni distancia de parada. También salen del preprint, no del artículo ASEE, ThingSpeak, el MECA 500 y el AMAX 5580.
 - Tamaño de la muestra: no indicado.
 
 ## Limitaciones (declaradas y observadas)
@@ -32,3 +33,6 @@ Proyecto en cuatro fases: sensores y comunicación inalámbrica; servidor web y 
 
 ## Citas textuales útiles
 - Ninguna.
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 6. Separados los datos del preprint de los del artículo ASEE. En la matriz y en la síntesis, `[@alasti2021turning]` solo se usa para lo que dice el resumen ASEE (añadir sensórica y comunicación a un robot heredado no colaborativo, con fines docentes). No se crea entrada para el preprint porque no se van a usar sus cifras.

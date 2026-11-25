@@ -19,7 +19,7 @@ Prototipo de API abierta que implementa el protocolo EMI (ENGEL) y captura hasta
 - Seguridad en la capa de comunicación: no indicado.
 
 ## Evaluación
-- Intervalo medio de muestreo: a 100 Hz solicitados se obtienen ~39,5 Hz (0,02532 s); a 33 Hz, 0,03001 s; a 2 Hz, 0,5006 s. Muestras con sobrecarga > 0,025 s: 0,96–2,43 % según caso.
+- Intervalo medio de muestreo: a 100 Hz solicitados se obtienen ~39,5 Hz (0,02532 s); a 33 Hz, 0,03001 s; a 2 Hz, 0,5006 s. Muestras con sobrecarga > 0,025 s: 0,96–2,43 % a 100, 50 y 33 Hz; incluyendo 2 Hz, 0,00–2,43 %. *(Corregido según la verificación: antes se daba 0,96–2,43 % para todos los casos.)*
 - Tamaño de la muestra: 4 900 muestras por ensayo.
 - No se probó la escritura (ajuste) de parámetros.
 
@@ -33,3 +33,6 @@ Prototipo de API abierta que implementa el protocolo EMI (ENGEL) y captura hasta
 
 ## Citas textuales útiles
 - "does not in any way hinder operation of the IMM's own control system" [página no anotada].
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 5. Rango de sobrecarga acotado por frecuencia. La cifra que se usa en la síntesis (~39,5 Hz efectivos con 100 Hz pedidos) está confirmada.

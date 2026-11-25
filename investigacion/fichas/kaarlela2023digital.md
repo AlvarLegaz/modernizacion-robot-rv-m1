@@ -18,7 +18,7 @@ La formación de operadores de robots necesita elementos interactivos del mundo 
 - Seguridad en la capa de comunicación: no indicado.
 
 ## Evaluación
-- Métricas: solo validación funcional por los autores en HTC Vive, Oculus Quest, tableta iOS y móvil Android; problemas detectados y corregidos (mapeo de botones, retardo en el jogging, imprecisión táctil resuelta con puntos de anclaje, y que al disparar seguridades virtuales se paraba el robot real; se cambió para que solo pare el gemelo).
+- Métricas: solo validación funcional por los autores en HTC Vive, Oculus Quest, tableta iOS y móvil Android; problemas detectados y corregidos (mapeo de botones, retardo en el jogging, imprecisión táctil resuelta con *snap points* (puntos de ajuste predefinidos; corregida la traducción anterior "puntos de anclaje"), y que al disparar seguridades virtuales se paraba el robot real; se cambió para que solo pare el gemelo).
 - Tamaño de la muestra / repeticiones: sin participantes; sin encuestas.
 
 ## Limitaciones (declaradas y observadas)
@@ -30,3 +30,6 @@ Beneficio formativo no medido; retardos de transferencia degradan el jogging; un
 
 ## Citas textuales útiles
 No se extrae cita textual.
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 9. Matiz de traducción (*snap points*).

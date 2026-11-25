@@ -30,3 +30,9 @@ Reducir la dificultad de programar robots industriales con lenguajes propietario
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - no indicado
+
+## Notas desde la línea revision-v1 (relectura 2026-11-25)
+- Releída la página del editor (mdpi.com/1424-8220/25/13/4153), a petición de la revisión v1 (mayor 2).
+- §3.2: el artículo **declara** un tratamiento tolerante a fallos ante "network delays or data loss", junto a la detección de "fuera de paso" con un umbral predefinido (cuyo valor no se da). **No describe el mecanismo** (ni temporizadores, ni reintentos, ni reconexión, ni marcas de tiempo o números de secuencia) **ni lo ensaya**.
+- No rechaza órdenes por antigüedad ni mide latencia extremo a extremo; 125 Hz es la frecuencia de sondeo (§2, §2.3).
+- Consecuencia para la síntesis: no se puede decir que "nadie trata los retrasos"; sí que el único trabajo que lo menciona lo declara sin describirlo ni verificarlo.

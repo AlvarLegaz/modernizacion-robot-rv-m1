@@ -1,0 +1,181 @@
+# Gemelo digital del Mitsubishi Movemaster EX RV-M1
+
+Aplicación web estática que se comporta como la controladora D/U-M1 y habla el contrato MQTT (`docu/contrato_mqtt.md`, v0.3) como `rvm1/gemelo/<id>/`. Un programa escrito para el gemelo sirve para el robot real cambiando solo el destino. En pantalla solo hay dos vistas, el modelo 3D y el teach pendant, más una barra de conexión plegable.
+
+Sin compilación ni dependencias externas en tiempo de ejecución: JavaScript plano, three.js y mqtt.js copiados en `lib/`.
+
+## Lanzarlo
+
+```bash
+cd gemelo
+python3 -m http.server 8080
+# abrir http://localhost:8080/
+```
+
+`python -m http.server` no sirve la ruta `/hora` (el desfase queda sin medir, `null`) y en algunos Windows entrega los `.js` como `text/plain`. En el aula es mejor el servidor de `broker/` (nginx de Docker Compose o `python broker/servidor_web.py`, puerto 8080), que sirve esta carpeta y `/hora`.
+
+Parámetros de URL opcionales:
+
+| Parámetro | Efecto |
+|---|---|
+| `?id=07` | Id del gemelo (manda sobre el usuario y lo recordado) |
+| `?vista=az,el,dist[,x,y,z]` | Cámara inicial (rad, m) |
+| `?demo=1` | Postura de demostración con dos puntos guardados (capturas) |
+| `?fantasma=1` | Fantasma de ejemplo desplazado, para enseñar el modo SOMBRA sin robot (solo capturas; no son datos) |
+| `?captura=1` | Conserva el búfer WebGL para las capturas headless |
+
+## Conectarlo a un broker
+
+El broker es opcional; sin él, el gemelo y el pendant funcionan en local.
+
+1. Desplegar **Conexión ▾** en la barra superior.
+2. URL: por defecto `ws://<host de la página>:9001` (`wss://` si la página va por HTTPS). Usuario `alumnoNN` y contraseña. El id del gemelo se deduce del usuario (`alumno07` → `07`) y se puede editar.
+3. **Conectar.** La configuración se guarda en `localStorage`, salvo la contraseña, que no se guarda ni va en la URL. El `clientId` es aleatorio, así que el alumno puede conectar a la vez desde el navegador y desde Python.
+
+Al conectar, el gemelo:
+
+| Topic | Sentido | QoS | Retain |
+|---|---|---|---|
+| `rvm1/gemelo/NN/comandos` | se suscribe | 1 | — |
+| `rvm1/gemelo/NN/comandos/ack` | publica | 1 | no |
+| `rvm1/gemelo/NN/actuadores` | publica al cambiar y ≥ 1 Hz | 1 | sí |
+| `rvm1/gemelo/NN/posicion/mundo` | publica tras cada movimiento y cada 500 ms en reposo | 0 | sí |
+| `rvm1/gemelo/NN/online` | `online` al conectar; LWT `offline` | 1 | sí |
+
+Los programas externos de los alumnos (por ejemplo Python con paho-mqtt, ver `broker/ejemplos/`) mueven el gemelo publicando en `comandos`. El 3D y el pendant (en modo local) reflejan esos movimientos porque leen el estado de la controladora emulada.
+
+## Modos del gemelo
+
+Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`EMULADOR`, `SOMBRA`, `SINCRONIZADO`). Los modos 2 y 3 necesitan el broker.
+
+| Modo | Qué hace | Topics que lee del real |
+|---|---|---|
+| **EMULADOR** (por defecto) | Interpreta `rvm1/gemelo/NN/comandos` y publica su estado | — |
+| **SOMBRA** | Igual que EMULADOR y, además, dibuja un robot fantasma azul semitransparente con la pose real (cinemática inversa desde X, Y, Z, P, R) y muestra en el pendant el error gemelo–real (`Δ real: … mm · ΔP …° · ΔR …°`) | `rvm1/real/<idReal>/posicion/mundo`, `actuadores`, `online` |
+| **SINCRONIZADO** | El modelo 3D sigue la pose real recibida, sin emular, para ver el robot real a distancia. Mientras dura, el emulador deja de atender `comandos` y publica `online = "offline"` en `rvm1/gemelo/NN/online`; el pendant (si su destino es local) pasa a solo lectura y muestra la posición real | los mismos |
+
+- El gemelo **nunca publica en `rvm1/real/...`**. La única excepción es el pendant con destino REAL, que publica `comandos` (solo el usuario `profesor` tiene permiso en el broker del aula).
+- Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
+- En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
+
+## Teach pendant
+
+Mismo diseño y comportamiento que `codigo/rvm1_pendant.py`: barra MANUAL/STOP · JOINT/WORLD · STEP/CONT · SP · REF, línea de alarma, X Y Z P R, seta STOP software enclavada hasta RESET, COORD, STEP/CONT, INCR, −%/+%, jog con rótulos `−X (J1)`, WORLD bloqueado sin referenciar, J4/J5 `art.` en WORLD, SP 2 al conectar y aviso de override desde SP 6. Se añade:
+
+- **F1 HOME, F2 RESET, F3 ABRIR, F4 CERRAR, F5 HE n, F6 MO n** y la lista de puntos (−/+ para elegir n o tocar la línea).
+- **Habilitación (3 posiciones):** botón ENABLE que hay que mantener con un dedo mientras se hace jog con otro (Pointer Events multitáctil). En escritorio vale mantener la barra espaciadora. Al soltar se detiene el jog. MO también exige habilitación; HOME no (como en el pendant Python).
+- **Destino** (barra de conexión): *Local* (texto RV-M1 directo a la controladora emulada, como el pendant Python por RS-232C), *MQTT gemelo* (contrato) o *MQTT REAL* (pide confirmación, marca el pendant en rojo y muestra un aviso permanente).
+- Con destino MQTT, el contrato no tiene HE/MO: los puntos se guardan en el propio pendant (`localStorage`) con la última `posicion/mundo` válida y "ir" se hace con `mover_pose`. Si se quiere HE/MO real por MQTT, hay que añadir dos comandos al contrato (propuesta abajo).
+
+El STOP de pantalla solo deja de enviar órdenes: en local vacía la cola del pendant y con MQTT envía `parar`. **La parada de emergencia real es la seta física.**
+
+## Registro (JSONL) para el experimento E2
+
+Barra de conexión → **Registro** → *Descargar*. Genera `AAAAMMDD-HHMMSS_gemelo_<descripcion>.jsonl` con el formato de la skill `registro-experimentos` (`t_ms`, `t_mono_ns`, `nodo`, `destino`, `evento`):
+
+- `nota` al inicio y al conectar: versión del gemelo y del contrato, supuestos activos, broker, usuario, operador, modo; además, cada medida del desfase con `/hora` (método, desfase, RTT).
+- `cmd_rx`, `ack_tx`, `serie_tx`, `serie_rx`, `pos` y `estado` de la pasarela; `cmd_tx` y `ack_rx` del pendant cuando usa MQTT (`nodo: "pendant"`).
+- `pos` con `destino: "real"` en los modos SOMBRA y SINCRONIZADO (ver arriba).
+
+`t_mono_ns` sale de `performance.now()`, cuya resolución la limita el navegador. Los registros del gemelo son simulados: dónde guardarlos (`datos_crudos/` del E2 junto al registro del real, o `datos_simulados/`) lo fija el protocolo del experimento. El campo "commit" hay que anotarlo a mano.
+
+## Relojes (contrato v0.3)
+
+- Caducidad: se rechaza (`caducado`) un `ts` con más de 500 ms de antigüedad o más de 100 ms por delante del reloj del gemelo, al recibir y al ejecutar.
+- `desfase_ms` se estima cada 30 s con `/hora` (algoritmo de Cristian, menor RTT de 5 muestras; `/hora` devuelve segundos con milisegundos y también se aceptan ms). Sin `/hora` se publica `null` y no se aplica el rechazo `reloj`.
+- Si el reloj del PC está desfasado más de 100 ms, el gemelo rechaza todo con `reloj`, como la placa. `contrato.corregir_reloj_con_hora` (en `config_rvm1.js`, `false` por defecto) hace que el gemelo corrija su reloj con `/hora`, como haría una placa con NTP. **Decisión pendiente del autor.**
+
+## Estructura
+
+```
+gemelo/
+  index.html, css/gemelo.css
+  lib/                 three.module.min.js (0.169.0), mqtt.min.js (5.16.1) y sus licencias
+  js/modelo/           HEADLESS (Node y navegador): config_rvm1.js (todos los datos del robot), cinematica.js,
+                       controladora.js (emulador D/U-M1), registro.js
+  js/mqtt/             pasarela.js (contrato, lado placa), cliente_contrato.js (lado aplicación), transporte_mqtt.js,
+                       hora.js (desfase con /hora), observador_real.js (modos SOMBRA/SINCRONIZADO)
+  js/render3d/         escena.js (luces, mesa, cámara orbital ratón/táctil), modelo_rvm1.js (RV-M1 procedural)
+  js/interfaz/         pendant.js, enlaces.js (local / MQTT / espejo), barra.js
+  js/app.js            une modelo → estado → vistas (las vistas solo leen)
+  tests/               node --test gemelo/tests
+  herramientas/        capturas.sh, prueba_navegador.js, prueba_mosquitto.js (opcionales)
+  capturas/            capturas del diseño en 1920×1080, 1366×1024, 1180×820, 1024×1366, 820×1180 y 390×844
+```
+
+La pasarela habla con la controladora emulada **solo por su interfaz de texto** (`NT`, `DJ`, `ER`, `WH`…), como la placa real por RS-232C, así que su lógica se puede llevar a la placa.
+
+## Pruebas
+
+```bash
+node --test gemelo/tests                  # 60 pruebas: cinemática, controladora, pasarela (contrato), hora, observador
+```
+
+Opcionales, con dependencias instaladas fuera del repositorio:
+
+```bash
+mkdir -p /tmp/deps && (cd /tmp/deps && npm init -y && npm install puppeteer-core@23 mqtt@5)
+(cd gemelo && python3 -m http.server 8765 --bind 127.0.0.1 &)
+NODE_PATH=/tmp/deps/node_modules node gemelo/herramientas/prueba_navegador.js http://127.0.0.1:8765/
+# con un mosquitto LOCAL (listener 18830 y listener 19001 websockets, anónimo, solo 127.0.0.1):
+NODE_PATH=/tmp/deps/node_modules node gemelo/herramientas/prueba_mosquitto.js http://127.0.0.1:8765/ ws://127.0.0.1:19001 mqtt://127.0.0.1:18830
+sh gemelo/herramientas/capturas.sh http://127.0.0.1:8765 gemelo/capturas
+```
+
+`prueba_mosquitto.js` se niega a ejecutarse contra un broker que no sea `127.0.0.1`/`localhost`.
+
+## Datos del robot por verificar
+
+Todos están en `js/modelo/config_rvm1.js`, marcados con `VERIFICAR con el plano del manual`:
+
+| Dato | Valor provisional |
+|---|---|
+| Altura del eje del hombro (J2) sobre la base | 300 mm |
+| Eje de cabeceo (J4) → brida | 72 mm |
+| Longitud de herramienta por defecto (TL) | 107 mm |
+| Límites respecto al cero: J1 / J2 / J3 / J4 / J5 | ±150 / −10…+120 / −110…0 / ±90 / ±180 ° |
+| Convenio de signos y ceros de cada eje (y si P es absoluto y R = J5) | el descrito en la cabecera del fichero |
+| Postura del origen tras `NT` | J = (0, 90, −90, −90, 0) |
+| Duración de `NT`, tabla SP 0–9, tiempo de pinza, nº de posiciones (629), rango de `TL` | 4 s, lineal 10–100 %, 0,4 s, 629, 0–300 mm |
+
+Con los límites provisionales, el codo (−110°) no deja llegar con la mano vertical a puntos bajos y cercanos; si el robot real sí llega, los límites o los ceros están mal. En el modo SOMBRA se ve enseguida: el aviso "fuera de límites del gemelo" lo indica.
+
+Datos seguros (manual): brazo 250 mm, antebrazo 160 mm, recorridos 300/130/110/180/360°, velocidades 120/72/109/100/163 °/s, frenos en J2 y J3, carga 1,2 kg, 1000 mm/s en la muñeca.
+
+**Aspecto 3D:** anchos, carcasas, posición de motores y colores están en `ASPECTO` (`js/render3d/modelo_rvm1.js`), separados de la cinemática, para afinarlos con fotos y medidas del robot.
+
+## Comportamiento de la controladora: supuestos
+
+Configurables en `config_rvm1.js → supuestos`; ninguno está verificado con el robot:
+
+1. **S1** `ER` (y `WH`) se atienden en orden: no responden hasta terminar el movimiento anterior. Es la base del ACK `hecho`.
+2. **S2** `DJ`/`MJ` se aceptan antes de `NT`.
+3. **S3** Sintaxis y rangos de argumentos (`DJ 1,10`, `MO n[,O|C]`, `SP n[,H|L]`…).
+4. **S4** No hay forma de abortar un movimiento por RS-232C.
+5. **S5** En error, solo se procesan `RS`, `ER` y `WH`; el resto se ignora.
+6. **S6** Un punto inalcanzable (MP, MO, DS, DJ fuera de límites) da error de modo II y el robot no se mueve. En `DS`, la recta entera se comprueba antes de empezar.
+7. `HE`/`MO` exigen `NT`. Errores de modo I solo por avería inyectada (`gemelo.ctrl.inyectarErrorModoI()` en la consola): corta el movimiento, aplica frenos y pierde la referencia.
+
+## Decisiones sobre el contrato (para la sesión principal)
+
+Interpretaciones tomadas sin cambiar el contrato:
+
+- `error_activo`: tras ER=1 solo se acepta `reset` y después `home`; tras ER=2 basta `reset`. Los comandos en cola cuando aparece un error se rechazan con `error_activo`.
+- `parar`: vacía la cola **sin enviar ACK** de los descartados (el contrato no da motivo) y su propio ACK final es `hecho` sin `er`, porque `ER` esperaría al final del movimiento en curso.
+- `velocidad` en `actuadores` es `null` hasta el primer `velocidad` recibido.
+- `desfase_ms` es `null` si no se ha podido medir.
+- Solo gemelo: si el pendant local hace `NT` directamente sobre la controladora, la pasarela adopta el estado de referencia (en la placa real no aplica).
+
+Propuestas para la próxima versión del contrato (no aplicadas):
+
+1. Motivo `cancelado` para los comandos descartados por `parar`.
+2. Comandos `guardar_punto {n}` (`HE n`) e `ir_punto {n}` (`MO n`).
+3. Permitir `desfase_ms: null` ("no medido") explícitamente.
+4. En la sección "Modos del gemelo" (v0.4): que en SINCRONIZADO el gemelo publique `online = "offline"`, como hace esta implementación.
+
+## Licencias de `lib/`
+
+- `three.module.min.js`: three.js 0.169.0, licencia MIT (`lib/LICENSE.three`).
+- `mqtt.min.js`: MQTT.js 5.16.1, licencia MIT (`lib/LICENSE.mqtt.md`).
+
+Copiados de los paquetes npm `three@0.169` y `mqtt@5` (instalados en un directorio temporal fuera del repositorio).

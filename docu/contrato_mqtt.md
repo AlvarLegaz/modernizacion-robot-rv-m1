@@ -1,8 +1,12 @@
 # Contrato MQTT del RV-M1
 
-Versión 0.2 (borrador)
+Versión 0.4 (borrador)
 
-Cambios respecto a 0.1: descarte de duplicados por `id`, caducidad comprobada también al ejecutar, sincronización de relojes, estado de error, red y seguridad, y alcance real de `parar` (a raíz de la revisión del estado del arte).
+Cambios respecto a 0.3: modos del gemelo (emulador, sombra y sincronizado) y topics del robot real que lee.
+
+Cambios de 0.3 respecto a 0.2: rechazo de `ts` adelantados, permisos del gemelo y medida del desfase con `/hora`.
+
+Cambios de 0.2 respecto a 0.1: descarte de duplicados por `id`, caducidad comprobada también al ejecutar, sincronización de relojes, estado de error, red y seguridad, y alcance real de `parar` (a raíz de la revisión del estado del arte).
 
 La placa de interfaz (ESP32 o Raspberry Pi) hace de puente entre el RS-232 del robot y el broker MQTT. La aplicación de control (SCADA, pendant, programas de alumnos, gemelo digital) **solo** habla MQTT.
 
@@ -45,7 +49,7 @@ Todos los mensajes son JSON en UTF-8. `ts` es la marca de tiempo en milisegundos
 
 - `id`: identificador único que pone el cliente; la placa lo devuelve en el ACK.
 - `destino`: `real` o `gemelo`, igual que en el topic. Si no coincide con el destino del receptor, el comando se rechaza (`destino`). Es una segunda comprobación para no mover el brazo real por error con un programa pensado para el gemelo.
-- `ts`: si el comando tiene más de 500 ms de antigüedad, la placa lo rechaza (`caducado`). La comprobación se hace **dos veces**: al recibirlo y justo antes de enviarlo por RS-232C, para que una orden que ha esperado en la cola tampoco se ejecute tarde.
+- `ts`: si el comando tiene más de 500 ms de antigüedad, la placa lo rechaza (`caducado`). También se rechaza (`caducado`) un `ts` más de 100 ms **por delante** del reloj del receptor, porque un emisor con el reloj adelantado anularía la protección. La comprobación se hace **dos veces**: al recibirlo y justo antes de enviarlo por RS-232C, para que una orden que ha esperado en la cola tampoco se ejecute tarde.
 - **Duplicados:** con QoS 1 un mensaje puede llegar más de una vez. La placa guarda los últimos `id` recibidos (al menos 256, o los de los últimos 10 s) y, si llega un `id` repetido, no lo ejecuta y devuelve otra vez el ACK que ya dio.
 
 | `cmd` | `args` | Comando RV-M1 |
@@ -141,11 +145,26 @@ Posición cartesiana del TCP leída con `WH`. Se publica tras cada movimiento y,
 - `x`, `y`, `z` en mm; `pitch` y `roll` en grados.
 - `valida` es `false` mientras el robot no esté referenciado: sin `home` la posición no es fiable.
 
+## Modos del gemelo
+
+El gemelo funciona en uno de tres modos, que se muestra siempre en su pantalla y en `actuadores` (campo `modo`):
+
+| Modo | Qué hace | Topics que lee del robot real |
+|---|---|---|
+| `emulador` | Interpreta los comandos de `rvm1/gemelo/<id>/comandos` como la controladora D/U-M1 y publica su propio estado. No depende del robot real. Es el modo de formación del alumnado. | ninguno |
+| `sombra` | Igual que `emulador`, y además dibuja la pose del robot real y calcula el error gemelo–real (mm y grados). Sirve para medir la fidelidad del emulador con el mismo programa enviado a los dos destinos. | `rvm1/real/<idReal>/posicion/mundo`, `rvm1/real/<idReal>/actuadores` |
+| `sincronizado` | No emula: su pose sigue a la del robot real recibida por MQTT. Sirve para ver el robot real a distancia. | los mismos que `sombra` |
+
+El gemelo **nunca publica en `rvm1/real/...`**. En los modos `sombra` y `sincronizado` registra cada pose real y la propia con marca de tiempo (formato de `registro-experimentos`) para el experimento E2.
+
 ## Relojes
 
 La caducidad compara el `ts` del cliente con el reloj de la placa, así que todos los equipos deben estar sincronizados por NTP con el mismo servidor de la red del aula. La placa publica en `actuadores` el campo `desfase_ms` (desfase estimado respecto al servidor NTP) y los experimentos lo registran. Si el desfase supera 100 ms, la placa rechaza todos los comandos con motivo `reloj`.
 
 ## Red y seguridad
+
+Permisos en el broker del aula (`broker/`): cada `alumnoNN` solo publica en `rvm1/gemelo/NN/...`; como su navegador ejecuta su propio gemelo, publica también los topics de estado de ese gemelo (`comandos/ack`, `actuadores`, `posicion/mundo`, `online`). Solo `placa_real` publica el estado de `rvm1/real/...` y solo `profesor` puede mandar `comandos` al robot real. Si no hay NTP, el desfase se puede estimar con la ruta `/hora` del servidor web del aula (hora del servidor en ms).
+
 
 El broker funciona en una red de aula aislada. Como mínimo, el broker exige usuario y contraseña y listas de acceso por topic: solo la placa publica en `rvm1/real/#` salvo `comandos`, y solo los usuarios autorizados publican en `rvm1/real/+/comandos`. Si la red no está aislada, se usa TLS (MQTT sobre puerto 8883, o WSS para clientes web).
 

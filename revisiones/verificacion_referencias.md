@@ -94,3 +94,39 @@ Las fichas no se han editado. Estos son los puntos que el autor de cada ficha (o
 - castillo2020propuesta: pages = 45--51.
 - roldan2018enhancing: pages = 6 (página inicial).
 - Todas las entradas tienen ahora `note = {verificacion: verificada|corregida; …}`. No se ha borrado ninguna entrada.
+
+## Ronda 2 (25/11/2026)
+
+- **Alcance:** las 8 entradas añadidas tras la revisión v1 (`note = {verificacion: pendiente}`) y las cifras de sus fichas en `investigacion/fichas/`.
+- **Método:** las APIs bibliográficas devuelven 403. Cada título se buscó con WebSearch y se abrió con WebFetch la fuente que apareció. peer.asee.org, bohrium.com, scribd.com e iso.org/standard/86204 no se pudieron abrir (error del sitio, WAF o JavaScript). En esos casos se usaron las fuentes alternativas que indica la tabla.
+- **Resultado:** 8 VERIFICADAS, 0 CORREGIDAS, 0 DUDOSAS, 0 NO ENCONTRADAS. No se cambió ningún metadato. Solo se actualizó el campo `note`.
+
+| Clave | Estado | Comprobado en | Observaciones |
+|---|---|---|---|
+| kutzer2023scorbot | VERIFICADA | PDF en nemo.asee.org (papers/40592/download) y página de la sesión en NEMO (papers/40592/view) | Título exacto y 3 autores en el PDF (Kutzer, Donnal y Wick; Wick firma como "Carl E. Wick Sr."). La página de la sesión (MECH Technical Session 6) solo lista a Kutzer y Wick; se mantienen los 3 del PDF. ASEE 2023 confirmado. **No se localizó el DOI**, porque peer.asee.org no se pudo abrir, ni se confirmó "Baltimore, MD" en lo leído. Cifras de la ficha confirmadas: MTIS para MATLAB de 32 bits y DLL USBC de 32 bits; tabla 3 con 128 funciones, 16 scripts y 18 986 líneas frente a 846 de MTIS; curso Introduction to Robotics, otoño de 2020; número de alumnos no indicado; "translate directly" en §2.3; RJ11 y SCORBASE. Matices en "Afirmaciones (ronda 2)". |
+| holmes2025retrofitting | VERIFICADA | sciencedirect.com (pii S2213846325001865) y cita [38] en arXiv 2601.10929 | Autores, título, Manufacturing Letters 44 (Supplement), 1337–1348, 2025 (en línea el 02/09/2025) y DOI coinciden. Cifras confirmadas: 8,3 % y 15,4 % de fallos; 13,9 % del tiempo del bucle, repartido al 50 % entre caídas de OPC XML-DA y errores de invocación de métodos; unos 7 ciclos; 12 ms como periodo de RSI (no es una medida); Raspberry Pi 5 y KUKA.OPC Server en ambas controladoras. Un matiz sobre la KRC2 en "Afirmaciones (ronda 2)". |
+| kumar2011virtual | VERIFICADA | Copia en academia.edu (91708949) | Autores, título, RCIM vol. 27, 994–1000, 2011 y DOI coinciden. **El número no figura en la copia** y no se añade. ScienceDirect y Scribd no se pudieron abrir. Contenido de la ficha confirmado: botones GET, GRASP, PLACE y RELEASE que no tiene el teach box real; trayectorias recta y circular; pick-and-place; "common system" simulación/real y dinámica como trabajo futuro; el usuario da el roll de la muñeca. |
+| oasis2014mqtt | VERIFICADA | docs.oasis-open.org (mqtt-v3.1.1.html) y oasis-open.org/?p=4424 | Editores: Andrew Banks y Rahul Gupta (IBM). Norma OASIS del 29/10/2014: la votación se cerró ese día y la aprobación se anunció el 30/10/2014. **La URL del .bib sirve la edición Plus Errata 01 (10/12/2015)**, como ya indica `howpublished`. Contenido de la ficha confirmado: §3.1.2.5 (desencadenantes de la Will), §3.3.1.1 (DUP; quien recibe no puede suponer que ya lo vio), §3.3.1.2 (QoS 1 "at least once") y §3.3.1.3 (RETAIN = 1/0). |
+| oasis2019mqtt | VERIFICADA | docs.oasis-open.org (mqtt-v5.0.html; "This version" = os/mqtt-v5.0-os.html) | Editores Banks, Briggs, Borgendale y Gupta. Norma OASIS del 07/03/2019, sin errata posterior indicada. Contenido de la ficha confirmado: §3.3.2.3.3 (borrar la copia si vence antes de empezar a entregarla, enviar el intervalo reducido y sin propiedad no caduca); Will no publicada con DISCONNECT 0x00 ni si el cliente reconecta antes del Will Delay Interval. |
+| iso2023sparkplug | VERIFICADA | committee.iso.org (ficha de catálogo 86204, versión en español) | ISO/IEC 20237:2023, "Information technology — Sparkplug® version 3.0", ed. 1, 18/10/2023, ISO/IEC JTC 1, 123 págs. El alcance coincide con la ficha. iso.org/standard/86204 no se pudo abrir. **No se ha leído el texto normativo**: lo que la ficha toma de Eclipse Kura (NDEATH, NBIRTH, bdSeq, STALE) no se comprobó en esta ronda y sigue siendo de fuente secundaria. |
+| iso1998manipulating | VERIFICADA | committee.iso.org/standard/22244 | ISO 9283:1998, ed. 2, abril de 1998, ISO/TC 299. Sustituye a ISO 9283:1990 y a su Amd 1:1991. Revisada y confirmada en 2021. Hay un ciclo de revisión cerrado el 05/06/2026 sin resultado registrado; conviene volver a mirar el estado antes de enviar el artículo. Texto normativo no leído. |
+| iso2025robotics | VERIFICADA | iso.org/standard/73933 | ISO 10218-1:2025, ed. 3, febrero de 2025, ISO/TC 299. El alcance (máquinas incompletas; la integración va en ISO 10218-2) coincide con la ficha. La ficha de catálogo no menciona dispositivos de habilitación ni teach pendants, como dice la ficha. Texto normativo no leído. |
+
+### Afirmaciones o cifras no respaldadas (ronda 2)
+
+1. **kutzer2023scorbot — "cuelgues".** La fuente habla de *crashes* de la DLL USBC al desconectar el pendant (cables RJ11 gastados). Sobre el desajuste tras actualizar SCORBASE, los autores dicen que **no saben si causó directamente los fallos** (sincronizar los ficheros lo resolvió). La ficha lo presenta como causa. Hay que matizarlo.
+2. **kutzer2023scorbot — erratas de la fuente.** El texto da 372 funciones relacionadas, pero 128 + 243 = 371, y 26 292 líneas de comentarios, pero 10 216 + 16 082 = 26 298. Las cifras de la ficha (128 funciones, ~19 000 líneas) salen de la tabla 3 y son correctas. No hay que usar los totales del texto.
+3. **holmes2025retrofitting — KRC2 en ambos robots.** El artículo nombra el KR10 y el KR16 y menciona "the age of the KRC2" al hablar de RSI. Lo leído no dice de forma explícita que **las dos** controladoras sean KRC2. Hasta confirmarlo, mejor escribir "controladoras KUKA KRC2 heredadas" sin precisar por robot o comprobarlo en el texto.
+4. **iso2023sparkplug.** El número de secuencia `seq` y el resto de la mecánica de Sparkplug siguen [POR VERIFICAR] en el texto normativo, como ya indica la ficha.
+
+### Acciones (ronda 2)
+
+1. **kutzer2023scorbot:** buscar el DOI de ASEE PEER (formato 10.18260/1-2--NNNNN) y el lugar del congreso en un entorno donde peer.asee.org responda. Hasta entonces, citar con la URL. Corregir en la ficha los matices 1 y 2.
+2. **kumar2011virtual:** si hace falta el número del volumen 27, sacarlo de ScienceDirect. No completarlo de memoria.
+3. **holmes2025retrofitting:** confirmar en el texto que las dos controladoras son KRC2 o rebajar la frase de la ficha.
+4. **Normas ISO (3):** se pueden citar solo para lo que dice la ficha de catálogo (existencia, título y alcance). No se puede atribuirles ningún requisito ni procedimiento concreto sin leer el texto.
+5. **oasis2014mqtt:** si se citan secciones, hacerlo sobre la edición Plus Errata 01, que es la que sirve la URL.
+
+### Cambios aplicados en `refs.bib` (ronda 2)
+
+- Solo cambia el campo `note` de las 8 entradas: `pendiente` → `verificada`, indicando la fuente y lo que no se confirmó. No se modificó ningún otro metadato ni se borró ninguna entrada.

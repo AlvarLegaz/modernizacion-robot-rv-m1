@@ -19,7 +19,7 @@ Recuperar un brazo educativo ED7220C (ED Corporation, 5 GDL con pinza) cuya cont
 
 ## Evaluación
 - Métricas: convergencia de la estimación de parámetros del actuador de base en ~1 s; visión a 0,955 mm/píxel y 5 FPS; alcance ~400 mm; coste de componentes principales ~230 USD; recogida de objeto sin colisión verificada experimentalmente (según resumen).
-- Tamaño de la muestra / repeticiones: no indicado. Uso docente descrito cualitativamente (laboratorio de Robótica de la Universidad de Colima, 3 TFG, talleres internos).
+- Tamaño de la muestra / repeticiones: no indicado. Uso docente en el laboratorio de Robótica de la Universidad de Colima (Colima confirmado por la verificación). *(Retirado "3 TFG y talleres internos": no se localizó en las partes leídas por el verificador; no respaldado.)*
 
 ## Limitaciones (declaradas y observadas)
 Control descentralizado sin modelo dinámico; fricción y holgura no modeladas; visión limitada a área pequeña y objetos rojos/amarillos; beneficio docente sin medir.
@@ -30,3 +30,6 @@ Control descentralizado sin modelo dinámico; fricción y holgura no modeladas; 
 
 ## Citas textuales útiles
 No se extrae cita textual.
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 12. Retirado el uso docente en "3 TFG y talleres" hasta localizarlo en el texto completo.

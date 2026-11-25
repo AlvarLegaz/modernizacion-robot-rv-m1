@@ -18,7 +18,7 @@ Teleoperación de un manipulador para ecografía remota a larga distancia (≈23
 - Seguridad en la capa de comunicación: las órdenes MQTT se interpretan primero en el gemelo y solo se ejecutan en el robot real tras validarse por la capa ROS y con confirmación de una persona junto al robot; permisos de acceso MQTT que impiden a clientes externos modificar propiedades del gemelo; VPN. No se menciona TLS, QoS, retain, LWT ni temporizadores.
 
 ## Evaluación
-- Métricas medidas: latencia en ensayos remotos: media 58 ms, mínima 43 ms, pico 318 ms; ping medio 116 ms en 2300 km. En otra sección se afirma "latencia de ida y vuelta media por debajo de 60 ms". [POR VERIFICAR: la relación exacta entre las cifras de ping y de latencia de aplicación no queda clara en el texto]. También avisos de fuerza, tiempos y un índice de desempeño φ; valoración con sujetos humanos.
+- Métricas medidas: el artículo **define latencia = RTT/2**. Por tanto, media 58 ms, mínima 43 ms y pico 318 ms son **latencias de un sentido**; el ping medio de 116 ms en 2300 km es el RTT. La frase de la discusión que habla de un RTT medio "por debajo de 60 ms" contradice esa definición (incoherencia de la fuente). Forma correcta de citarlo: "latencia de un sentido ≈ 58 ms (RTT ≈ 116 ms)". *(Resuelto el [POR VERIFICAR] anterior según la verificación.)* También avisos de fuerza, tiempos y un índice de desempeño φ; valoración con sujetos humanos.
 - Tamaño de la muestra / repeticiones: ensayos RT1–RT3; nº de muestras de latencia y método de sincronización de relojes no indicado (los autores proponen un servicio ROS para sincronizar las medidas de RTT como trabajo futuro).
 
 ## Limitaciones (declaradas y observadas)
@@ -31,3 +31,6 @@ Teleoperación de un manipulador para ecografía remota a larga distancia (≈23
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - no indicado
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 4. Las cifras de 58/43/318 ms son de un sentido (latencia = RTT/2); 116 ms es el RTT. No escribir "RTT < 60 ms".

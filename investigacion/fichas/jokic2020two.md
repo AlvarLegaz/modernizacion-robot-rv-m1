@@ -22,7 +22,7 @@ Las unidades de control obsoletas inutilizan robots industriales mecánicamente 
 
 ## Evaluación
 - Métricas (solo eje 1, 0→1 rad→0, control PD): PC: error máximo en movimiento 40 mrad, en reposo 0,2 mrad (2 pulsos; 1 pulso = 0,102 mrad). FPGA: error en reposo 1,2 mrad (12 pulsos); errores en movimiento fuera de rango de medida (±2 mrad), estimados indirectamente. Simulación: ≈1 mrad en movimiento, 0,2 mrad en reposo.
-- Costes: FPGA ≈12 k€ frente a ≈35 k€ PC (con mano de obra); solo hardware ≈1 k€ frente a ≈15 k€.
+- Costes: FPGA ≈12 k€ frente a ≈35 k€ PC (con mano de obra); solo hardware ≈1 k€ frente a ≈15 k€. **No son una medida propia del trabajo:** los autores toman estas cifras de su referencia [22]. *(Matiz añadido según la verificación.)*
 - Tamaño de la muestra / repeticiones: no indicado.
 
 ## Limitaciones (declaradas y observadas)
@@ -35,3 +35,6 @@ Las unidades de control obsoletas inutilizan robots industriales mecánicamente 
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - No se extrae.
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 7. Los costes se citan, si acaso, como "estimación recogida por los autores", no como medida suya. En la síntesis se usa solo el error del eje 1.

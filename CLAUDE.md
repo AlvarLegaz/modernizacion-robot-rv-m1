@@ -9,6 +9,8 @@ Autor y responsable: Álvar Ginés Legaz Aparicio (doctor, profesor de FP en el 
 | Carpeta | Contenido |
 |---|---|
 | `codigo/` | Scripts del robot (`rvm1_control.py`, `rvm1_pendant.py`) y, más adelante, puente MQTT y gemelo |
+| `gemelo/` | Gemelo digital web estático (three.js + mqtt.js en `lib/`): modelo headless (cinemática, emulador D/U-M1, pasarela del contrato, registro JSONL), 3D, teach pendant y modos EMULADOR/SOMBRA/SINCRONIZADO; pruebas con `node --test gemelo/tests` |
+| `broker/` | Servidor MQTT del aula: Mosquitto con usuarios y ACL según el contrato, `crear_usuarios.py`, Docker Compose (broker + web del gemelo), ejemplo para alumnos y pruebas |
 | `docu/` | Propuesta, contrato MQTT, referencias del manual del robot |
 | `investigacion/` | Estado del arte: `busquedas/` (registro de búsquedas), `fichas/` (una ficha por trabajo), `matriz.md`, `huecos.md`, `estado_del_arte.md` |
 | `referencias/refs.bib` | Bibliografía única del proyecto (BibTeX) |

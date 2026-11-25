@@ -18,7 +18,7 @@ Sincronizar un gemelo digital online (ROS/Gazebo) con un robot físico para que 
 - Seguridad en la capa de comunicación: algoritmo de comprobación de pose (PCA) que compara ángulos virtuales y físicos con un umbral y, si se supera, reinicia el objetivo a la pose actual y replanifica; control en modo relativo. La aprobación humana previa se plantea como trabajo futuro.
 
 ## Evaluación
-- Métricas medidas: error articular medio entre 2,3·10⁻⁷ y 2,2·10⁻⁵ rad; máximos entre 2,8·10⁻⁷ y 7,0·10⁻⁶ rad (A3: 2,07·10⁻⁵ rad, inferior a su media, posible errata en la tabla). Latencia no cuantificada.
+- Métricas medidas: error articular medio entre 2,3·10⁻⁷ y 2,2·10⁻⁵ rad. **Máximo global: 2,07·10⁻⁵ rad (eje A3)**; el texto lo resume como "< 2,1·10⁻⁵ rad". *(Corregido: la versión anterior daba como rango de máximos 2,8·10⁻⁷–7,0·10⁻⁶ rad; 7,0·10⁻⁶ es el máximo de A5, no el global.)* Incoherencia de la tabla de la fuente: en A3 y A6 el error medio es mayor que el máximo. Latencia no cuantificada.
 - Tamaño de la muestra / repeticiones: trayectoria virtual de 1500 puntos y 18 802 medidas físicas.
 
 ## Limitaciones (declaradas y observadas)
@@ -30,3 +30,6 @@ Sincronizar un gemelo digital online (ROS/Gazebo) con un robot físico para que 
 
 ## Citas textuales útiles (máx. 1, < 15 palabras, con página)
 - no indicado
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 3. Rango de máximos corregido; la incoherencia media > máximo está en A3 y A6. En la síntesis se cita como "del orden de 10⁻⁷ a 10⁻⁵ rad, con incoherencias en la tabla de la fuente".

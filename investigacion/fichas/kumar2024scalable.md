@@ -1,9 +1,9 @@
 # Scalable and low-cost remote lab platforms: Teaching industrial robotics using open-source tools and understanding its social implications
 
 - **Clave:** kumar2024scalable
-- **Referencia:** Kumar, A., Jose, J., Jain, A., Kulkarni, S., Arva, K. (2024). Scalable and low-cost remote lab platforms: Teaching industrial robotics using open-source tools and understanding its social implications. Preprint arXiv:2412.15369; aceptado en la 16th International Conference on Social Robotics + AI (ICSR 2024) según los autores [POR VERIFICAR versión publicada y DOI de Springer].
-- **DOI/URL:** https://arxiv.org/abs/2412.15369
-- **Tipo:** preprint (aceptado en congreso)
+- **Referencia:** Kumar, A., Jose, J., Jain, A., Kulkarni, S., Arya, K. (2025). Scalable and Low-Cost Remote Lab Platforms: Teaching Industrial Robotics Using Open-Source Tools and Understanding Its Social Implications. En Social Robotics (ICSR + AI 2024), LNCS, Springer Nature Singapore, pp. 202–215. (Versión publicada confirmada por `verificador-referencias` vía Crossref; preprint arXiv:2412.15369.)
+- **DOI/URL:** https://doi.org/10.1007/978-981-96-3522-1_19 (preprint leído: https://arxiv.org/abs/2412.15369)
+- **Tipo:** congreso (leído en su versión preprint)
 - **Leído:** texto completo
 - **Línea:** educacion-gemelos
 
@@ -19,7 +19,7 @@ Dar acceso a robots industriales reales a miles de estudiantes a bajo coste medi
 
 ## Evaluación
 - Métricas: latencia media ~300 ms y ~2 s de retraso de vídeo (Stack 1); 160 turnos de 1 h (Stack 1) y 355 h (Stack 2) de uso remoto del hardware; media de acceso de finalistas 19,4 h y 30,8 h; abandono >50 % en fases iniciales.
-- Tamaño de la muestra / repeticiones: 1433 alumnos (373 equipos) y 1312 alumnos (349 equipos); a hardware llegaron 14 y 38 equipos.
+- Tamaño de la muestra / repeticiones: 1433 alumnos (373 equipos) y 1312 alumnos (349 equipos). Acceso al hardware: 14 equipos en el Stack 1; en el Stack 2 se preseleccionaron 38, pero **solo 36 recibieron acceso remoto**. *(Corregido: antes decía "llegaron 14 y 38".)* La duración es incoherente en la fuente (7 meses en el resumen, 6 en las contribuciones).
 
 ## Limitaciones (declaradas y observadas)
 El operador debe reiniciar el entorno tras cada uso; configuración del host compleja. Observadas: sin evaluación formal de aprendizaje ni grupo de control; "implicaciones sociales" poco desarrolladas.
@@ -30,3 +30,6 @@ El operador debe reiniciar el entorno tras cada uso; configuración del host com
 
 ## Citas textuales útiles
 No se extrae cita textual.
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 8 y tabla. Versión publicada (LNCS 2025) y apellido "Arya" corregidos; equipos con acceso al hardware: 14 y 36; duración incoherente en la fuente. Ya no se marca como NRP en la síntesis, porque hay versión revisada publicada.

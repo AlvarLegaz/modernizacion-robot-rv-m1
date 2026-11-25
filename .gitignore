@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+# broker/: credenciales y ficheros generados por crear_usuarios.py (NO subir)
+broker/credenciales_*.csv
+broker/config/passwd
+broker/config/acl
+broker/config/.passwd_*
+broker/mosquitto_local.conf
+broker/data/

@@ -18,7 +18,7 @@ Monitorizar y programar una celda robótica industrial real desde realidad virtu
 - Seguridad en la capa de comunicación: no indicado. Hay scripts de prevención de colisiones basados en el gemelo (seguridad funcional, no de red).
 
 ## Evaluación
-- Métricas: reducción del modelo de >1 000 000 a ~80 000 caras; precisión de consigna articular 0,001°; objetivo 90 FPS (antes de multihilo <20 FPS); retardo medio entre comandos reportado como "32,875 ms" [POR VERIFICAR: posible errata de unidades]. Prevención de colisiones evaluada solo cualitativamente.
+- Métricas: reducción del modelo de >1 000 000 a ~80 000 caras; precisión de consigna articular 0,001°; objetivo 90 FPS (antes de multihilo <20 FPS); retardo medio entre comandos reportado literalmente como "32,875 ms" (confirmado como literal por la verificación; ≈ 32,9 s si la coma es separador de miles). Probable errata de la fuente: **no usar esta cifra**. Prevención de colisiones evaluada solo cualitativamente.
 - Tamaño de la muestra / repeticiones: no indicado; uso diario en el laboratorio IVAR (TalTech) con estudiantes y valoración informal de un especialista.
 
 ## Limitaciones (declaradas y observadas)
@@ -30,3 +30,6 @@ API bajo NDA (no reproducible); evaluación cualitativa, sin estudio con usuario
 
 ## Citas textuales útiles
 No se extrae cita textual (no verificada la paginación exacta).
+
+## Correcciones tras la verificación (2026-11-25, respuesta a la revisión v1)
+- Origen: `revisiones/verificacion_referencias.md`, punto 11 y acción 8. La cifra de "32,875 ms" se retira de la matriz y de la síntesis.
