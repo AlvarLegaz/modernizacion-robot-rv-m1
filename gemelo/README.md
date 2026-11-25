@@ -69,6 +69,18 @@ Sobre la mesa hay un **cubo naranja de 25 mm** y una **mesita azul de 100 × 100
 
 Parámetros de URL para capturas: `?practica=1` (cubo dejado sobre la mesita) y `?colision=1` (aviso fijo tras bajar la mano contra la mesa).
 
+### Preprograma cargado: ciclo del cubo
+
+El botón **▶ Ciclo del cubo** (arriba a la izquierda de la vista 3D) lanza un programa cíclico (`cicloCubo()` en `js/modelo/programa.js`, líneas del lenguaje de la controladora que van a la misma controladora que los comandos del pendant o de MQTT). Antes de empezar recoloca el cubo y, mientras corre, el botón se pone verde («■ Parar ciclo · vuelta N · línea actual»). Se detiene con el mismo botón, con STOP del pendant o si la controladora da error. Cada vuelta:
+
+1. `NT`, `SP 5`, `GO`.
+2. Coge el cubo de la mesa (X 260, Y −150): `MP` a 100 mm, baja a 4,5 mm, `GC`, sube.
+3. Lo deja en la mesita (X 260, Y 150): `MP` a 100 mm, baja a 44,5 mm, `GO`, sube.
+4. `NT` (vuelve al origen de referencia).
+5. Coge el cubo de la mesita, lo deja de nuevo en la mesa en su sitio inicial y vuelve a `NT`. Empieza otra vuelta.
+
+Prueba: `tests/mundo.test.js` (dos vueltas sin errores ni colisiones).
+
 ## Modelo 3D
 
 Procedural en three.js, con el aspecto parametrizado en `ASPECTO` (`js/render3d/modelo_rvm1.js`), a partir de fotos del robot real (no se suben al repositorio): carcasas marfil amarillento satinado, base en dos niveles (placa y pedestal con cajetín trasero de conectores), anillo de la cintura gris oscuro, tambor lateral en el hombro, cable rizado negro, pinza negra tipo caja y rótulos de texto plano «MOVEMASTER EX» y «MITSUBISHI» (sin logotipos). Las longitudes cinemáticas salen de `config_rvm1.js`. La nave de taller de fondo está en `js/render3d/nave.js` y los ejes X/Y/Z en `js/render3d/ejes.js`.

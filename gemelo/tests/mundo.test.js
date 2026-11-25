@@ -92,3 +92,26 @@ test('la pinza contra la base avisa (estado sintético dentro del pedestal)', ()
   const r = w.paso(10, { q: sol.q, tl: CFG.geometria.herramienta_defecto, apertura: 1, pinza: 'abierta', pose: CIN.fk(sol.q, CFG.geometria.herramienta_defecto) });
   assert.ok(r.nuevas.some((e) => e.piezas[1] === 'base'), JSON.stringify(r));
 });
+
+test('preprograma cíclico: coge el cubo, lo deja en la mesita, vuelve al origen y lo devuelve a la mesa, sin colisiones ni errores', () => {
+  const { crearPrograma, cicloCubo } = require('../js/modelo/programa');
+  const c = crearControladora();
+  const w = crearMundo({ config: CFG, escena: ESC });
+  const p = crearPrograma({ controladora: c, lineas: cicloCubo(ESC) });
+  const colisiones = [], visitas = [];
+  p.iniciar();
+  let t = 0, enMesita = false;
+  while (p.estado().vueltas < 2 && p.estado().activo && t < 600000) {
+    p.tick(); c.avanzar(10); const r = w.paso(10, c.estado()); colisiones.push(...r.nuevas);
+    const q = w.estado().cubo;
+    if (!q.agarrado && !q.cayendo && Math.abs(q.z - (MES.alto + CUBO.lado / 2)) < 0.01) enMesita = true;
+    t += 10;
+  }
+  assert.equal(p.estado().motivoParada, null, 'no se detuvo: ' + p.estado().motivoParada);
+  assert.equal(p.estado().vueltas, 2, 'dos vueltas completas');
+  assert.ok(enMesita, 'el cubo se dejó en la mesita');
+  const f = w.estado().cubo;
+  assert.ok(Math.abs(f.x - CUBO.inicio.x) < 1 && Math.abs(f.y - CUBO.inicio.y) < 1 && Math.abs(f.z - CUBO.lado / 2) < 0.01, 'termina en su sitio: ' + JSON.stringify(f));
+  assert.equal(colisiones.length, 0, JSON.stringify(colisiones));
+  assert.equal(c.estado().err, 0);
+});

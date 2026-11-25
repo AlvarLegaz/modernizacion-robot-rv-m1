@@ -13,6 +13,7 @@
     <main id="principal">
       <section id="vista3d" aria-label="Modelo 3D del RV-M1">
         <button id="btn-vista" class="btn-vista" title="Vista inicial">⟲ Vista inicial</button>
+        <button id="btn-prog" class="btn-vista btn-prog" title="Preprograma cíclico: coger el cubo, dejarlo en la mesita, volver al origen, cogerlo y dejarlo en la mesa">▶ Ciclo del cubo</button>
         <button id="btn-cubo" class="btn-vista btn-cubo" title="Devuelve el cubo a su sitio inicial">Recolocar cubo</button>
         <div id="aviso-colision" class="aviso-colision" role="alert" aria-live="assertive"><b>COLISIÓN</b><span></span></div>
         <div id="leyenda3d" class="leyenda3d" aria-hidden="true"></div>
@@ -28,6 +29,7 @@
   <script src="js/modelo/controladora.js"></script>
   <script src="js/modelo/config_escena.js"></script>
   <script src="js/modelo/mundo.js"></script>
+  <script src="js/modelo/programa.js"></script>
   <script src="js/modelo/registro.js"></script>
   <script src="js/mqtt/pasarela.js"></script>
   <script src="js/mqtt/cliente_contrato.js"></script>

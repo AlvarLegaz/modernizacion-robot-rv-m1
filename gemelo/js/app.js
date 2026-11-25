@@ -84,6 +84,16 @@ crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
 const mundo = R.mundo.crearMundo({ config: CFG, escena: R.escena });
 const objetos = crearObjetos(escena.THREE, escena.escena, R.escena);
 document.getElementById('btn-cubo').addEventListener('click', () => { mundo.recolocar(); escena.pedir(); });
+// preprograma cargado: ciclo del cubo (js/modelo/programa.js). Corre en la controladora local, igual que un programa externo por MQTT.
+const programa = R.programa.crearPrograma({ controladora: ctrl, lineas: R.programa.cicloCubo(R.escena), ciclico: true });
+const btnProg = document.getElementById('btn-prog');
+btnProg.addEventListener('click', () => {
+  if (programa.estado().activo) { programa.parar('parado por el usuario'); return; }
+  if (modo === 'sincronizado') return;
+  if (pendant.estado.estop) { pendant.alarm('STOP activo: pulsa RESET (F2) antes de lanzar el ciclo.'); return; }
+  if (ctrl.estado().err) ctrl.enviar('RS');
+  mundo.recolocar(); programa.reiniciarVueltas(); programa.iniciar(); escena.pedir();
+});
 const avisoEl = document.getElementById('aviso-colision');
 let avisoT = 0;
 const NOMBRES = { brazo: 'el brazo', antebrazo: 'el antebrazo', mano: 'la mano', dedos: 'la pinza', cubo: 'el cubo', mesa: 'la mesa', mesita: 'la mesita', base: 'la base' };
@@ -222,6 +232,7 @@ setInterval(() => {
   const dt = Math.min(1000, t - tPrev); tPrev = t;
   ctrl.avanzar(dt);
   if (pasarela && modo !== 'sincronizado') pasarela.tick();
+  if (programa.estado().activo) { if (pendant.estado.estop || modo === 'sincronizado') programa.parar('STOP o modo sincronizado'); else programa.tick(); }
   if (modo !== 'sincronizado') for (const c of mundo.paso(dt, ctrl.estado()).nuevas) avisarColision(c.piezas);
 }, 15);
 
@@ -251,6 +262,8 @@ escena.alAntesDeRender(() => {
     }
   }
   if (objetos.actualizar(mundo.estado())) escena.pedir();
+  { const ps = programa.estado(), t = ps.activo ? '■ Parar ciclo · vuelta ' + (ps.vueltas + 1) + ' · ' + ps.linea : '▶ Ciclo del cubo';
+    if (btnProg.textContent !== t) { btnProg.textContent = t; btnProg.classList.toggle('on', ps.activo); } }
   pendant.ponerInfoModo(info);
   pendant.actualizar();
   const q = modo === 'sincronizado' && o && o.q ? o.q : e.q;
@@ -285,7 +298,7 @@ if (parametros.has('fantasma')) {
 }
 
 // para depurar desde la consola
-window.gemelo = { ctrl, mundo, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
+window.gemelo = { ctrl, mundo, programa, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
 // ?medir=1 (pruebas de diseño): anota en <body data-medida> si la página o el pendant desbordan
 if (parametros.has('medir')) {

@@ -46,6 +46,8 @@ button { font-family: inherit; }
 .btn-vista { position: absolute; top: 10px; right: 10px; z-index: 2; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 22px; border: 0;
   background: rgba(21,23,26,.78); color: #fff; font-size: 14px; cursor: pointer; backdrop-filter: blur(4px); }
 .btn-cubo { right: auto; left: 10px; }
+.btn-prog { right: auto; left: 10px; top: 64px; }
+.btn-prog.on { background: #1f8a4a; }
 .aviso-colision { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; pointer-events: none;
   background: rgba(214, 30, 30, .38); color: #fff; text-align: center; opacity: 0; transition: opacity .25s; }
 .aviso-colision.on { opacity: 1; transition: none; }
