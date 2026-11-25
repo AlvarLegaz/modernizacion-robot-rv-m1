@@ -1,0 +1,49 @@
+# Propuesta de Proyecto Final de Grado
+
+## Recuperación y control remoto IoT de un brazo robótico Mitsubishi Movemaster RV-M1 mediante Python y MQTT
+
+Modernización de un brazo robótico Mitsubishi **Movemaster EX RV-M1** (5 grados de libertad, servomotores DC con encoders incrementales, controladora D/U-M1 con interfaces RS-232C y Centronics): reparación, control desde Python, teach pendant de software y puente IoT a MQTT.
+
+## Tareas
+
+1. **Reparar el error del homing** (error de modo I) hasta que NT termine sin fallos.
+2. **Probar la teaching box original (T/B-M1)** en sus dos modos de movimiento: articular y cartesiano (XYZ).
+3. **Probar desde el PC por RS-232** con `rvm1_control.py`: comandos, lectura de posición (WH) y de errores (ER).
+4. **Probar el pendant de software** (`rvm1_pendant.py`) con el robot real, conectado directamente al PC.
+5. **Placa de interfaz:** un ESP32 o una Raspberry Pi con conversor RS-232 que haga de puente entre el robot y un broker MQTT.
+6. **Definir los topics MQTT:** uno para enviar comandos y otros para publicar posición, error y estado.
+7. **Pasar el pendant a MQTT,** para que hable con la placa en vez de con el puerto serie.
+8. **Aprendizaje de puntos:** grabar posiciones y reproducir secuencias.
+9. **Coger y dejar un objeto** con la pinza.
+10. *(Opcional)* **Gemelo digital** para el alumnado, con los mismos comandos y topics MQTT.
+
+## Estructura del repositorio
+
+```
+codigo/
+  rvm1_control.py    Control por RS-232C desde consola (jog articular y cartesiano, WH, ER...)
+  rvm1_pendant.py    Teach pendant gráfico (Tkinter) con aspecto y manejo de pendant industrial
+docu/
+  Propuesta_PFG_RV-M1.pdf   Esta propuesta en PDF
+  pendant.png               Captura del pendant en modo simulación
+  referencias.md            Manuales y documentación técnica del RV-M1
+```
+
+## Uso rápido
+
+Requisitos: Python 3.8+ y `pyserial` (`pip install pyserial`). Los dos scripts deben estar en la misma carpeta.
+
+```bash
+cd codigo
+python rvm1_control.py --port COM3        # consola de comandos
+python rvm1_pendant.py                    # teach pendant gráfico (marca "Simular" para probar sin robot)
+```
+
+En el pendant hay que **mantener pulsada la barra espaciadora** como dispositivo de habilitación; el jog se hace con las teclas de la derecha o con Q/A, W/S, E/D, R/F, T/G. El modo cartesiano (WORLD) solo se activa tras referenciar el robot (HOME).
+
+![Teach pendant en simulación](docu/pendant.png)
+
+## Avisos
+
+- La sintaxis de comandos y los parámetros serie (9600 baudios, 7 bits, paridad par, 2 de stop) están tomados del manual y **deben verificarse con la máquina** (interruptores SW2/SW3 de la controladora).
+- El botón STOP del pendant es solo software: deja de enviar órdenes. **La parada de emergencia real es la seta física** de la controladora o de la teaching box.
