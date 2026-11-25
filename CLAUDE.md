@@ -47,6 +47,7 @@ Patrón orquestador-trabajadores + productor-evaluador. La sesión principal (co
 - **No inventar referencias.** Toda cita debe tener DOI o URL comprobable y estar en `refs.bib`. Si no se encuentra la fuente, se dice.
 - **No inventar datos.** Los resultados solo salen de `experimentos/datos_crudos/`. Nunca se rellenan valores, ni "ejemplos ilustrativos" presentados como medidas.
 - **`datos_crudos/` no se modifica nunca**; los análisis leen de ahí y escriben en `analisis/`.
+- **Latido obligatorio (función de seguridad):** el robot real solo se mueve con latido válido de la aplicación (contrato MQTT, sección 5). Cualquier cliente, pendant o programa que mande al `real` debe emitir el latido y respetar `sin_latido`; ningún cambio puede dejar al robot sin ese requisito ni afirmar que es una función certificada.
 - **Seguridad del robot:** ningún agente envía comandos al robot real. El código que lo controle debe respetar el contrato MQTT (`docu/contrato_mqtt.md`) y las seguridades del pendant.
 - **Separación productor/revisor:** quien escribe un documento no lo revisa.
 - **Extensión:** el artículo no puede pasar de **8–9 páginas** en la plantilla de la revista, referencias incluidas. Respetar el presupuesto de palabras de la skill `redaccion-cientifica`.

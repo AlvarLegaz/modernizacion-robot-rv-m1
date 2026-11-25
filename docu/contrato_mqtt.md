@@ -1,8 +1,10 @@
 # Contrato MQTT del RV-M1
 
-Versión 0.4 (borrador)
+Versión 0.5 (borrador)
 
-Cambios respecto a 0.3: modos del gemelo (emulador, sombra y sincronizado) y topics del robot real que lee.
+Cambios respecto a 0.4: **latido y parada segura** (sección 5, requisito indispensable de seguridad del robot real), topic `latido`, campos de seguridad en `actuadores`, comando `stop` y motivo de rechazo `sin_latido`.
+
+Cambios de 0.4 respecto a 0.3: modos del gemelo (emulador, sombra y sincronizado) y topics del robot real que lee.
 
 Cambios de 0.3 respecto a 0.2: rechazo de `ts` adelantados, permisos del gemelo y medida del desfase con `/hora`.
 
@@ -26,6 +28,7 @@ En las tablas siguientes se usa `rvm1/real/01/` como ejemplo.
 | Topic | Sentido | QoS | Retain | Contenido |
 |---|---|---|---|---|
 | `rvm1/real/01/comandos` | cliente → placa | 1 | **no** | Orden a ejecutar |
+| `rvm1/real/01/latido` | cliente → placa | 0 | **no** | Latido de la aplicación (sección 5) |
 | `rvm1/real/01/comandos/ack` | placa → cliente | 1 | no | Confirmación de cada orden |
 | `rvm1/real/01/actuadores` | placa → clientes | 1 | sí | Estado actual del robot |
 | `rvm1/real/01/posicion/mundo` | placa → clientes | 0 | sí | Posición cartesiana del TCP |
@@ -61,6 +64,7 @@ Todos los mensajes son JSON en UTF-8. `ts` es la marca de tiempo en milisegundos
 | `velocidad` | `sp` (0–9) | `SP sp` |
 | `pinza` | `accion`: `"abrir"` / `"cerrar"` | `GO` / `GC` |
 | `reset` | — | `RS` |
+| `stop` | — | Abre **ya** el circuito de parada eléctrica (`EXT. EMG. STOP`); no pasa por el RS-232C ni por la cola. Ver sección 5 |
 | `parar` | — | Vacía la cola de la placa. **No detiene el movimiento en curso**: el RV-M1 no puede abortar un movimiento por RS-232C; la parada real es la seta física |
 
 ## 2. `comandos/ack`
@@ -91,6 +95,7 @@ Cada comando recibe **dos** ACK: uno al recibirlo y otro al terminar.
 | `error_activo` | El robot está en error. Solo se aceptan `reset` y, después, `home`; cualquier otro comando se rechaza |
 | `desconectado` | La placa no tiene comunicación con el robot |
 | `reloj` | El desfase del reloj de la placa supera 100 ms |
+| `sin_latido` | No hay permiso de movimiento: falta el latido de la aplicación, o hay una parada sin rearmar (sección 5) |
 
 Ejemplo de rechazo:
 
@@ -112,7 +117,11 @@ Estado del robot tal como lo ve la placa. Se publica al cambiar y, como mínimo,
   "pinza": "abierta",
   "ocupado": false,
   "cola": 0,
-  "desfase_ms": 3
+  "desfase_ms": 3,
+  "permiso": true,
+  "latido_edad_ms": 42,
+  "parada": "ninguna",
+  "circuito_parada": "cerrado"
 }
 ```
 
@@ -126,6 +135,10 @@ Estado del robot tal como lo ve la placa. Se publica al cambiar y, como mínimo,
 | `ocupado` | Hay un comando enviado al robot sin terminar |
 | `cola` | Comandos pendientes en la placa |
 | `desfase_ms` | Desfase estimado del reloj de la placa respecto al servidor NTP |
+| `permiso` | La placa tiene permiso de movimiento (latido válido y sin parada pendiente de rearme) |
+| `latido_edad_ms` | Tiempo desde el último latido válido |
+| `parada` | Causa de la última parada: `ninguna`, `latido` (pérdida), `remota` (`stop`), `local` (pulsador de la placa) o `placa` (fallo propio) |
+| `circuito_parada` | Estado del circuito de parada leído de vuelta por la placa: `cerrado` (permite mover), `abierto` (parado) o `discrepancia` (el contacto no coincide con lo ordenado) |
 
 La controladora del RV-M1 no informa del estado de cada motor (corriente, temperatura, ángulo), así que `actuadores` describe el estado del robot en conjunto.
 
@@ -160,6 +173,55 @@ El gemelo **nunca publica en `rvm1/real/...`**. En los modos `sombra` y `sincron
 ## Relojes
 
 La caducidad compara el `ts` del cliente con el reloj de la placa, así que todos los equipos deben estar sincronizados por NTP con el mismo servidor de la red del aula. La placa publica en `actuadores` el campo `desfase_ms` (desfase estimado respecto al servidor NTP) y los experimentos lo registran. Si el desfase supera 100 ms, la placa rechaza todos los comandos con motivo `reloj`.
+
+## 5. Latido y parada segura (requisito indispensable para el robot real)
+
+**Principio:** el robot solo puede moverse mientras la placa recibe latidos válidos de la aplicación. La parada no depende de que llegue un mensaje «parar»: la **ausencia** de latido la provoca. Una orden `stop` explícita es un atajo más rápido, pero la garantía la da el latido. Esto es una función de seguridad **del sistema que se diseña y se mide**; **no está certificada** (ISO 13849 / IEC 62061) y **no sustituye a las setas físicas**, que siguen siendo la parada de emergencia real.
+
+### Latido
+
+- Topic `rvm1/real/<id>/latido`, QoS 0, sin retain, solo para el destino `real` (el gemelo lo admite igual para que el alumnado practique).
+- Contenido: `{ "seq": 1234, "ts": 1764067200000, "sesion": "a1b2c3" }`. `seq` crece de uno en uno; `sesion` identifica la sesión de mando.
+- Periodo de la aplicación: `T_latido` = 100 ms (parámetro; el valor definitivo sale de la latencia medida).
+- Solo un emisor puede mandar: la ACL del broker permite publicar en `latido` únicamente al usuario con permiso de mando del robot real (`profesor`). Una segunda sesión con otro `sesion` activo no suma.
+
+### Permiso de movimiento (lo decide la placa)
+
+- **Se concede** tras `N_ini` = 3 latidos válidos consecutivos (`seq` creciente, `ts` dentro de la ventana de caducidad) y sin parada pendiente de rearme.
+- **Se pierde** si pasan más de `T_timeout` = 3 × `T_latido` (300 ms, a confirmar con la medida) sin un latido válido, si el `seq` retrocede o salta de forma incoherente, o si hay parada.
+- **Sin permiso:** la placa rechaza los comandos que mueven el robot (`home`, `jog_*`, `mover_pose`, `pinza`) con el motivo `sin_latido`. `velocidad`, `reset` y las consultas siguen disponibles.
+
+### Parada
+
+Al perder el permiso **con el robot en movimiento o con movimiento permitido**, y al recibir `stop`, la placa **abre el circuito de parada eléctrica** (`EXT. EMG. STOP` de la D/U-M1) y publica `parada` y `circuito_parada` en `actuadores`. La orden `stop` se atiende en la placa sin pasar por la cola RS-232C. `parar` (vaciar la cola) se mantiene y no sustituye a `stop`.
+
+**Rearme manual:** tras una parada el circuito **no se cierra solo**. Hace falta una acción local deliberada en la placa (pulsador de rearme) y después latidos válidos otra vez. El rearme desde la aplicación no existe. Después hay que referenciar el robot (`home`) si la controladora lo exige.
+
+### Requisitos de la placa (fallo seguro)
+
+1. El circuito de parada es **normalmente abierto sin energía**: solo permite mover mientras el ESP32 lo mantiene activo (relé o optoacoplador «energizado para permitir»). Sin alimentación, sin firmware o sin latido, el robot está parado.
+2. **Watchdog hardware** y detector de caída de tensión del ESP32 que abren el circuito sin depender del código.
+3. **Lectura de vuelta** del contacto (interfaz «supervisada»): si no coincide con lo ordenado, `circuito_parada = discrepancia` y no se concede permiso. Prueba del circuito al arrancar y de forma periódica.
+4. La decisión de cortar **no depende del broker**: si falla el broker, la red o la aplicación, deja de llegar el latido y la placa corta por sí misma.
+5. **Pulsador de parada local** en la placa, independiente del WiFi.
+6. Las setas físicas de la controladora y de la teaching box siguen **en serie e independientes** de todo lo anterior.
+
+### Presupuesto de tiempo
+
+`t_parada_max = T_timeout + t_placa + t_rele + t_frenado`
+
+`t_frenado` es el tiempo y el recorrido del RV-M1 desde que se abre `EXT. EMG. STOP` hasta que se detiene (frenos de J2 y J3): **dato por medir en el robot real**. Los demás términos se miden en la placa. El valor de `T_timeout` se elige con la latencia de latido medida (percentil 99 y máximo, con la red cargada) más un margen, no a ojo.
+
+### Condiciones de uso mientras no haya certificación
+
+Persona con la mano junto a la seta en toda sesión con el robot real, celda acotada, velocidad reducida (`SP` bajo) y red WiFi dedicada (SSID propio, sin roaming) con el broker en la misma LAN.
+
+### Validación (experimentos)
+
+- Distribución de la latencia del latido y de `stop` (percentiles 50/95/99 y máximo), con y sin carga de red.
+- Inyección de fallos: cortar el WiFi, matar el broker, cerrar la aplicación y quitar la alimentación a la placa; en cada caso, medir el tiempo hasta que el circuito se abre y comprobar que **ningún fallo lo deja cerrado**.
+- Comprobar el rearme: no se produce por sí solo.
+- Registrar todo en JSONL con el método de medida de los relojes.
 
 ## Red y seguridad
 
