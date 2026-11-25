@@ -16,7 +16,10 @@ Manejo, como en un pendant real:
 - COORD: alterna JOINT / WORLD. WORLD solo tras referenciar (HOME).
 - STEP/CONT: jog por paso (un incremento por pulsación) o continuo
   (mientras se mantiene la tecla).
-- INCR: tamaño del paso. +% / −%: override de velocidad (SP 0..9).
+- INCR / VEL: en STEP fija el tamaño del paso; en CONT la misma tecla pasa a
+  ser VEL y fija la velocidad de jog (LENTA, MEDIA, RÁPIDA, MÁX).
+- +% / −%: override de velocidad de la controladora (SP 0..9), que limita
+  la velocidad real que se alcanza.
 - La velocidad arranca baja (SP 2) al conectar y tras una parada.
 
 Requiere Python 3.8+ y pyserial (pip install pyserial).
@@ -169,9 +172,14 @@ F = "Segoe UI"
 MONO = "Consolas"
 
 INCREMENTS = [("PEQ", 0.1), ("MED", 1.0), ("GRA", 5.0), ("MUY", 10.0)]
-CONT_STEP = 2.0          # ° por tick en jog continuo articular
-CONT_STEP_WORLD = 5.0    # mm por tick en jog continuo cartesiano (más rápido, a petición del autor)
 CONT_PERIOD_MS = 200
+# Velocidades de jog continuo: (nombre, ° por tick articular, mm por tick
+# cartesiano). Con un tick cada 200 ms: 2.5/10/20/30 °/s y 5/25/50/100 mm/s,
+# siempre por debajo de los 250 mm/s de T1. La velocidad real queda además
+# limitada por SP: si la controladora no termina el paso, no se encola otro.
+CONT_SPEEDS = [("LENTA", 0.5, 1.0), ("MEDIA", 2.0, 5.0),
+               ("RÁPIDA", 4.0, 10.0), ("MÁX", 6.0, 20.0)]
+VEL_DEFAULT = 1
 SP_DEFAULT = 2
 SP_WARN = 6
 
@@ -196,6 +204,7 @@ class Pendant(tk.Tk):
         self.coord = "JOINT"           # JOINT | WORLD
         self.jogmode = "STEP"          # STEP | CONT
         self.incr_idx = 1
+        self.vel_idx = VEL_DEFAULT
         self.sp = SP_DEFAULT
         self.enabled = False           # barra espaciadora mantenida
         self.homed = False
@@ -454,8 +463,9 @@ class Pendant(tk.Tk):
         # barra de estado
         self.st_coord.config(text=self.coord)
         inc = INCREMENTS[self.incr_idx][1]
+        vtxt = self._vel_text()
         self.st_jog.config(text=f"STEP {inc:g}" if self.jogmode == "STEP"
-                           else "CONT")
+                           else f"CONT {vtxt}")
         warn = self.sp >= SP_WARN
         self.st_ovr.config(text=f"SP {self.sp}",
                            bg=AMBER if warn else BAR)
@@ -474,9 +484,10 @@ class Pendant(tk.Tk):
         # tecla COORD: WORLD bloqueado sin referenciar
         self.k_coord.config(text=f"COORD\n{self.coord}")
         self.k_mode.config(text="STEP" if self.jogmode == "STEP" else "CONT")
-        self.k_incr.config(text=f"INCR\n{inc:g}",
-                           state="normal" if self.jogmode == "STEP"
-                           else "disabled")
+        if self.jogmode == "STEP":
+            self.k_incr.config(text=f"INCR\n{inc:g}")
+        else:
+            self.k_incr.config(text=f"VEL\n{vtxt}")
 
         # rotulado de teclas de jog (estilo FANUC: −X (J1))
         for i, row in enumerate(self.jog_keys):
@@ -603,6 +614,7 @@ class Pendant(tk.Tk):
         self.worker.clear()
         self._jog_release()
         self._set_sp(SP_DEFAULT, quiet=True)
+        self.vel_idx = VEL_DEFAULT
         self.es_canvas.itemconfig(self._es_cap, fill="#8c1c14")
         self.alarm("STOP software: envíos detenidos. RESET (F3) para seguir.")
         self._refresh_all()
@@ -610,7 +622,8 @@ class Pendant(tk.Tk):
     def _cycle_coord(self):
         if self.coord == "JOINT":
             if not self.homed:
-                self.alarm("WORLD no disponible: robot no referenciado.")
+                self.alarm("WORLD no disponible: pulsa RESET (F3) y luego "
+                           "HOME (F2) para referenciar.")
                 return
             self.coord = "WORLD"
         else:
@@ -623,8 +636,23 @@ class Pendant(tk.Tk):
         self._refresh_all()
 
     def _cycle_incr(self):
-        self.incr_idx = (self.incr_idx + 1) % len(INCREMENTS)
+        # STEP: tamaño del paso. CONT: velocidad de jog.
+        if self.jogmode == "STEP":
+            self.incr_idx = (self.incr_idx + 1) % len(INCREMENTS)
+        else:
+            self.vel_idx = (self.vel_idx + 1) % len(CONT_SPEEDS)
         self._refresh_all()
+
+    def _cont_step(self, axis):
+        _, deg, mm = CONT_SPEEDS[self.vel_idx]
+        return mm if self.coord == "WORLD" and axis < 3 else deg
+
+    def _vel_text(self):
+        _, deg, mm = CONT_SPEEDS[self.vel_idx]
+        k = 1000 / CONT_PERIOD_MS
+        if self.coord == "WORLD":
+            return f"{mm * k:g} mm/s"
+        return f"{deg * k:g} °/s"
 
     def _set_sp(self, sp, quiet=False):
         self.sp = max(0, min(9, sp))
@@ -691,7 +719,7 @@ class Pendant(tk.Tk):
             return
         if self.worker.pending() <= 1:
             ax, s = self._jog
-            cmd = self._jog_cmd(ax, s, CONT_STEP_WORLD if self.coord == "WORLD" and ax < 3 else CONT_STEP)
+            cmd = self._jog_cmd(ax, s, self._cont_step(ax))
             self.worker.submit(self.robot.run, cmd, False, label=f"> {cmd}")
         self._jog_job = self.after(CONT_PERIOD_MS, self._cont_tick)
 

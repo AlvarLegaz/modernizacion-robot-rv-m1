@@ -7,9 +7,11 @@
 'use strict';
 
 export const INCREMENTS = [['PEQ', 0.1], ['MED', 1.0], ['GRA', 5.0], ['MUY', 10.0]];
-export const CONT_STEP = 2.0;          // ° por tick en jog continuo articular
-export const CONT_STEP_WORLD = 5.0;    // mm por tick en jog continuo cartesiano (X/Y/Z), más rápido; el periodo y SP mantienen el límite de 1000 mm/s
 export const CONT_PERIOD_MS = 200;
+// Jog continuo: la tecla INCR pasa a VEL y elige la velocidad (nombre, ° por tick articular, mm por tick cartesiano).
+// Con un tick cada 200 ms: 2.5/10/20/30 °/s y 5/25/50/100 mm/s (bajo los 250 mm/s de T1); SP limita además la velocidad real.
+export const CONT_SPEEDS = [['LENTA', 0.5, 1.0], ['MEDIA', 2.0, 5.0], ['RÁPIDA', 4.0, 10.0], ['MÁX', 6.0, 20.0]];
+export const VEL_DEFAULT = 1;
 export const SP_DEFAULT = 2;
 export const SP_WARN = 6;
 const KEYMAP = { q: [0, +1], a: [0, -1], w: [1, +1], s: [1, -1], e: [2, +1], d: [2, -1], r: [3, +1], f: [3, -1], t: [4, +1], g: [4, -1] };
@@ -20,7 +22,7 @@ const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1);
 export function crearPendant(raiz) {
   // ------------------------------------------------ estado de máquina (como en rvm1_pendant.py)
   const st = {
-    coord: 'JOINT', jogmode: 'STEP', incrIdx: 1, sp: SP_DEFAULT, estop: false,
+    coord: 'JOINT', jogmode: 'STEP', incrIdx: 1, velIdx: VEL_DEFAULT, sp: SP_DEFAULT, estop: false,
     habilitado: false, jog: null, jogPuntero: null, contTimer: null,
     lastEr: null, homed: false, punto: 1, alarma: ''
   };
@@ -154,12 +156,13 @@ export function crearPendant(raiz) {
     jogRelease();
     if (enlace) enlace.vaciar();
     setSp(SP_DEFAULT, true);
+    st.velIdx = VEL_DEFAULT;
     alarm('STOP software: envíos detenidos. RESET (F2) para seguir.');
     refrescar();
   }
   function cycleCoord() {
     if (st.coord === 'JOINT') {
-      if (!st.homed) { alarm('WORLD no disponible: robot no referenciado.'); return; }
+      if (!st.homed) { alarm(st.lastEr ? 'WORLD no disponible: pulsa RESET (F2) y luego HOME (F1).' : 'WORLD no disponible: pulsa HOME (F1) para referenciar.'); return; }
       st.coord = 'WORLD';
     } else st.coord = 'JOINT';
     alarm(''); refrescar();
@@ -211,8 +214,16 @@ export function crearPendant(raiz) {
     if (!st.jog || !enabled() || st.estop || !enlace) return;
     if (enlace.estado().pendientes <= 1) {
       const [ax, s] = st.jog;
-      log('> ' + jogSend(ax, s, st.coord === 'WORLD' && ax < 3 ? CONT_STEP_WORLD : CONT_STEP));
+      log('> ' + jogSend(ax, s, contStep(ax)));
     }
+  }
+  function contStep(ax) {
+    const [, deg, mm] = CONT_SPEEDS[st.velIdx];
+    return st.coord === 'WORLD' && ax < 3 ? mm : deg;
+  }
+  function velTexto() {
+    const [, deg, mm] = CONT_SPEEDS[st.velIdx], k = 1000 / CONT_PERIOD_MS;
+    return st.coord === 'WORLD' ? (mm * k) + ' mm/s' : (deg * k) + ' °/s';
   }
   function jogRelease() {
     if (st.contTimer) { clearInterval(st.contTimer); st.contTimer = null; }
@@ -256,7 +267,11 @@ export function crearPendant(raiz) {
   seta.addEventListener('pointerdown', (e) => { e.preventDefault(); estop(); });
   kCoord.addEventListener('click', cycleCoord);
   kMode.addEventListener('click', () => { st.jogmode = st.jogmode === 'STEP' ? 'CONT' : 'STEP'; refrescar(); });
-  kIncr.addEventListener('click', () => { st.incrIdx = (st.incrIdx + 1) % INCREMENTS.length; refrescar(); });
+  kIncr.addEventListener('click', () => {           // STEP: tamaño del paso; CONT: velocidad de jog
+    if (st.jogmode === 'STEP') st.incrIdx = (st.incrIdx + 1) % INCREMENTS.length;
+    else st.velIdx = (st.velIdx + 1) % CONT_SPEEDS.length;
+    refrescar();
+  });
   kMenos.addEventListener('click', () => override(-1));
   kMas.addEventListener('click', () => override(+1));
   fHome.addEventListener('click', home);
@@ -295,7 +310,7 @@ export function crearPendant(raiz) {
     const e = enlace ? enlace.estado() : null;
     const inc = INCREMENTS[st.incrIdx][1];
     poner(sCoord, 'textContent', st.coord, 'sc');
-    poner(sJog, 'textContent', st.jogmode === 'STEP' ? 'STEP ' + inc : 'CONT', 'sj');
+    poner(sJog, 'textContent', st.jogmode === 'STEP' ? 'STEP ' + inc : 'CONT ' + velTexto(), 'sj');
     const warn = st.sp >= SP_WARN;
     poner(sOvr, 'textContent', 'SP ' + st.sp, 'so'); clase(sOvr, 'ambar', warn);
     poner(ovrLbl, 'textContent', 'SP ' + st.sp, 'ol'); clase(ovrLbl, 'ambar', warn);
@@ -316,8 +331,7 @@ export function crearPendant(raiz) {
     poner(kCoord, 'innerHTML', 'COORD<br>' + st.coord, 'kc');
     clase(kCoord, 'bloq', st.coord === 'JOINT' && !st.homed);
     poner(kMode, 'innerHTML', st.jogmode === 'STEP' ? 'STEP' : 'CONT', 'km');
-    poner(kIncr, 'innerHTML', 'INCR<br>' + inc, 'ki');
-    kIncr.disabled = st.jogmode !== 'STEP';
+    poner(kIncr, 'innerHTML', st.jogmode === 'STEP' ? 'INCR<br>' + inc : 'VEL<br>' + velTexto(), 'ki');
 
     for (let i = 0; i < 5; i++) {
       const j = 'J' + (i + 1);
