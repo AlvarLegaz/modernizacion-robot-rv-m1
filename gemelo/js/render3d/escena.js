@@ -4,6 +4,7 @@
 //   e.escena, e.camara, e.pedir(), e.vistaInicial(), e.alAntesDeRender(fn), e.liberar()
 // Unidades de la escena: metros. Eje Y de three.js = Z del robot (vertical).
 import * as THREE from '../../lib/three.module.min.js';
+import { crearNave } from './nave.js';
 
 export function crearEscena(contenedor, opc) {
   opc = opc || {};
@@ -22,8 +23,7 @@ export function crearEscena(contenedor, opc) {
   contenedor.appendChild(renderer.domElement);
 
   const escena = new THREE.Scene();
-  escena.background = new THREE.Color(0xd9dee3);
-  escena.fog = new THREE.Fog(0xd9dee3, 4, 9);
+  escena.background = new THREE.Color(0x9aa3ab);
   const camara = new THREE.PerspectiveCamera(36, 1, 0.02, 20);
 
   // ---- luces: cielo/suelo + clave con sombra suave + relleno
@@ -56,9 +56,8 @@ export function crearEscena(contenedor, opc) {
   }
   mesa.position.x = 0.15;    // el robot queda hacia el fondo-izquierda de la mesa, con sitio delante para piezas
   escena.add(mesa);
-  const suelo = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0xbfc5cb, roughness: 0.95 }));
-  suelo.rotation.x = -Math.PI / 2; suelo.position.y = -M.altura; suelo.receiveShadow = true;
-  escena.add(suelo);
+  // nave de taller (suelo, paredes, tuberías, rótulo): ver nave.js
+  crearNave(THREE, escena, { yPiso: -M.altura, mesa: M, mesaX: mesa.position.x, alCambiar: () => pedir() });
 
   // ---- cámara orbital
   const orb = { az: V0.az, el: V0.el, dist: V0.dist, obj: new THREE.Vector3(...V0.obj) };

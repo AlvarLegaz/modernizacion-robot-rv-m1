@@ -127,7 +127,15 @@
       for (let k = 1; k <= n; k++) {
         const u = k / n;
         const pk = { x: p0.x + (destino.x - p0.x) * u, y: p0.y + (destino.y - p0.y) * u, z: p0.z + (destino.z - p0.z) * u, p: p0.p, r: p0.r };
-        const sol = CIN.ik(pk, s.tl, qRef);
+        // El cabeceo (P) no se mantiene a rajatabla: si con P fijo algún eje se sale de su recorrido (p. ej. el origen deja J4 en su tope),
+        // se prueba con P ligeramente distinto (hasta ±20°), como hace la controladora real al mover en cartesiano.
+        let sol = CIN.ik(pk, s.tl, qRef);
+        for (let dp = 1; !sol.ok && sol.motivo === 'limite_articular' && dp <= 20; dp++) {
+          for (const sg of [1, -1]) {
+            const alt = CIN.ik({ ...pk, p: pk.p + sg * dp }, s.tl, qRef);
+            if (alt.ok) { sol = alt; break; }
+          }
+        }
         if (!sol.ok) return { ok: false, motivo: 'recta_' + sol.motivo };
         // salto brusco de configuración a mitad de recta: no es una recta realizable
         if (sol.q.some((v, i) => Math.abs(v - qRef[i]) > 20)) return { ok: false, motivo: 'recta_discontinua' };

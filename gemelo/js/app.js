@@ -10,6 +10,7 @@
 // En ningún modo se publica en rvm1/real/... salvo los `comandos` del pendant con destino REAL (permiso de profesor).
 import { crearEscena } from './render3d/escena.js';
 import { crearModeloRVM1 } from './render3d/modelo_rvm1.js';
+import { crearEjes } from './render3d/ejes.js';
 import { crearPendant } from './interfaz/pendant.js';
 import { crearBarra } from './interfaz/barra.js';
 import { crearEnlaceLocal, crearEnlaceMqtt, crearEnlaceEspejo } from './interfaz/enlaces.js';
@@ -77,6 +78,7 @@ const escena = crearEscena(vista, { vistaInicial, preservar: parametros.has('cap
 const robot = crearModeloRVM1(escena.escena, CFG);
 const fantasma = crearModeloRVM1(escena.escena, CFG, undefined, { fantasma: true });
 fantasma.visible = false;
+crearEjes(escena.THREE, escena.escena, { largo: 0.3 });   // referencia visual X (rojo), Y (verde), Z (azul) en el origen de la base
 document.getElementById('btn-vista').addEventListener('click', () => escena.vistaInicial());
 const leyenda = document.getElementById('leyenda3d');
 

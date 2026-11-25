@@ -218,3 +218,12 @@ test('fk de la postura final coincide con WH', () => {
   const p = CIN.fk(e.q, e.tl);
   assert.deepEqual(p, e.pose);
 });
+
+test('DS desde el origen (J4 en su tope) se mueve en X, Y y Z sin error', () => {
+  const c = crearControladora();
+  referenciar(c);
+  for (const l of ['DS 5,0,0', 'DS -5,0,0', 'DS 0,5,0', 'DS 0,0,5', 'DS 0,0,-5']) {
+    c.enviar(l); hastaReposo(c);
+    assert.equal(c.estado().err, 0, l + ' → ' + c.estado().motivoError);
+  }
+});
