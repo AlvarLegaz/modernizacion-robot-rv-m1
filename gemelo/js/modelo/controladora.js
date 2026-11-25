@@ -251,11 +251,24 @@
     }
 
     // ---------------------------------------------------------------- bucle de tiempo
+    // Veto de contacto (opcional): veto(q, tl) → true si esa postura atraviesa algo sólido (mesa, base…). Si el movimiento
+    // llegaría a ella, el robot se queda en la última postura libre, se cancela el movimiento en curso (sin error de la
+    // controladora) y se emite mov_fin con bloqueado:true. Las líneas ya en cola siguen su curso.
+    let veto = null;
+    function ultimaLibre(q0, q1) {                        // bisección entre una postura libre (q0) y otra vetada (q1)
+      let lo = 0, hi = 1;
+      for (let k = 0; k < 8; k++) {
+        const m = (lo + hi) / 2, qm = q0.map((v, i) => v + (q1[i] - v) * m);
+        if (veto(qm, s.tl)) hi = m; else lo = m;
+      }
+      return q0.map((v, i) => v + (q1[i] - v) * lo);
+    }
     function avanzarAccion(dt) {
       const ac = s.accion;
       const resto = ac.t + dt - ac.dur;
       ac.t = Math.min(ac.dur, ac.t + dt);
       const u = perfil(ac.t / ac.dur);
+      const q0 = s.q.slice();
       if (ac.tipo === 'articular') {
         for (let i = 0; i < 5; i++) s.q[i] = ac.q0[i] + (ac.q1[i] - ac.q0[i]) * u;
       } else if (ac.tipo === 'lineal') {
@@ -263,6 +276,12 @@
         for (let i = 0; i < 5; i++) s.q[i] = ac.camino[k][i] + (ac.camino[k + 1][i] - ac.camino[k][i]) * w;
       } else if (ac.tipo === 'pinza') {
         s.apertura = ac.desde + (ac.hasta - ac.desde) * u;
+      }
+      if (veto && ac.tipo !== 'pinza' && veto(s.q, s.tl)) {
+        s.q = ultimaLibre(q0, s.q);
+        s.accion = null;
+        emitir({ tipo: 'mov_fin', linea: ac.linea, bloqueado: true });
+        return 0;
       }
       if (ac.t >= ac.dur) {
         if (ac.tipo === 'articular') s.q = ac.q1.slice();
@@ -318,6 +337,7 @@
 
     return {
       enviar, avanzar, estado,
+      ponerVeto(fn) { veto = typeof fn === 'function' ? fn : null; },
       alEvento(fn) { oyentes.push(fn); return () => { const i = oyentes.indexOf(fn); if (i >= 0) oyentes.splice(i, 1); }; },
       inyectarErrorModoI(texto) { error(1, texto || 'averia_inyectada', null); },
       ponerConectado(v) { s.conectado = !!v; },

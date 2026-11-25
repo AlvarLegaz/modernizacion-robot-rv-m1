@@ -99,6 +99,7 @@ crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
 // escena de prácticas: cubo y mesita (modelo headless en modelo/mundo.js; aquí solo se dibuja)
 const mundo = R.mundo.crearMundo({ config: CFG, escena: R.escena });
 const objetos = crearObjetos(escena.THREE, escena.escena, R.escena);
+ctrl.ponerVeto((q, tl) => mundo.bloquea(q, tl));        // la mesa y la base son sólidas: el robot se queda donde toca
 document.getElementById('btn-cubo').addEventListener('click', () => { mundo.recolocar(); escena.pedir(); });
 // programas: el integrado «Ciclo del cubo» y los del usuario (guardados en el navegador, importables y exportables en JSON; ver js/modelo/programa.js)
 const PR = R.programa;
@@ -129,17 +130,18 @@ btnProg.addEventListener('click', () => {
   if (progActual.recolocar) mundo.recolocar();
   programa.reiniciarVueltas(); programa.iniciar(); escena.pedir();
 });
+ctrl.alEvento((ev) => { if (ev.tipo === 'mov_fin' && ev.bloqueado && programa.estado().activo) programa.parar('error: el robot ha tocado la mesa o la base y se ha detenido'); });
 let progEraActivo = false;
 if (parametros.has('gestor')) gestor.abrir();     // ?gestor=1 (capturas): abre la ventana de programas
 const avisoEl = document.getElementById('aviso-colision');
 let avisoT = 0;
 const NOMBRES = { brazo: 'el brazo', antebrazo: 'el antebrazo', mano: 'la mano', dedos: 'la pinza', cubo: 'el cubo', mesa: 'la mesa', mesita: 'la mesita', base: 'la base' };
-function avisarColision(piezas) {       // solo advertencia: no detiene el robot ni genera error de la controladora
+function avisarColision(piezas) {       // la mesa y la base detienen el robot (veto en la controladora, sin error); lo demás se empuja
   const txt = NOMBRES[piezas[0]] + ' con ' + NOMBRES[piezas[1]];
   avisoEl.querySelector('span').textContent = txt;
   avisoEl.classList.add('on'); clearTimeout(avisoT);
   if (!parametros.has('colision')) avisoT = setTimeout(() => avisoEl.classList.remove('on'), 800);      // ?colision=1 (capturas): el aviso se queda
-  pendant.alarm('COLISIÓN: ' + txt + ' (el robot no se detiene).');
+  pendant.alarm('COLISIÓN: ' + txt + (piezas[1] === 'mesa' || piezas[1] === 'base' ? ' (el robot se ha detenido; sal con jog).' : '.'));
   registro.ev('colision', { piezas });
 }   // referencia visual X (rojo), Y (verde), Z (azul) en el origen de la base
 document.getElementById('btn-vista').addEventListener('click', () => escena.vistaInicial());

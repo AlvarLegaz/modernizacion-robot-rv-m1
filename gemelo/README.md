@@ -64,8 +64,12 @@ Sobre la mesa hay un **cubo naranja de 25 mm** y una **mesita azul de 100 × 100
 
 - **Coger:** `GC` (o `MO n,C`) con el TCP a menos de 10 mm del centro del cubo en el plano y ±12 mm en vertical (el TCP queda 8 mm por debajo del centro del cubo): el cubo queda sujeto y se mueve con la pinza.
 - **Soltar:** `GO` y el cubo cae sobre lo que tenga debajo (mesa, mesita o el suelo si está fuera de la mesa).
-- **Recolocar:** botón «Recolocar cubo» en la vista 3D (`window.gemelo.mundo.recolocar()`).
-- **Colisiones (solo advertencia):** cápsulas por eslabón (brazo, antebrazo, mano, dedos) y el cubo agarrado contra la mesa, la mesita, la base (antebrazo, mano y dedos) y el cubo suelto (salvo los dedos). Al chocar, la vista 3D se tiñe de rojo 0,8 s con el rótulo **COLISIÓN**, sale en la línea de alarma del pendant y se anota en el JSONL como evento `colision` con las piezas (`{"piezas":["mano","mesa"]}`). **No detiene el robot ni genera error de la controladora.** No se repite mientras dure el contacto: vuelve a avisar al separarse y chocar otra vez.
+- **Recolocar:** botón «Recolocar objetos» (cubo y mesita) en la vista 3D (`window.gemelo.mundo.recolocar()`).
+- **Contactos.** Cápsulas por eslabón (brazo, antebrazo, mano, dedos) y el cubo agarrado contra la mesa, la base, la mesita y el cubo suelto:
+  - **Mesa y base: sólidas.** El robot no las atraviesa: se queda donde toca, el movimiento en curso se cancela, la vista 3D se tiñe de rojo 0,8 s con el rótulo **COLISIÓN** y sale en la alarma del pendant. No genera error de la controladora (se puede salir con jog) y se anota en el JSONL como evento `colision`. Un programa en ejecución se detiene. Por MQTT el movimiento termina con ACK `hecho` en la posición alcanzada.
+  - **Cubo suelto:** lo empuja el brazo; si va con velocidad sale despedido, desliza y gira según dónde le den, y cae si pierde el apoyo. Los dedos pasan sin tocarlo solo cuando bajan o suben centrados sobre él (para cogerlo).
+  - **Mesita:** el brazo, o el cubo que lleva, la desplaza mientras empuja; el cubo que tiene encima se mueve con ella.
+  - El aviso no se repite mientras siga el contacto: vuelve a avisar al separarse y chocar otra vez.
 
 Parámetros de URL para capturas: `?practica=1` (cubo dejado sobre la mesita) y `?colision=1` (aviso fijo tras bajar la mano contra la mesa).
 

@@ -21,10 +21,12 @@ export function crearObjetos(THREE, escena, ESC) {
   return {
     cubo, mesita,
     actualizar(est) {
-      const c = est.cubo, f = c.x.toFixed(2) + ',' + c.y.toFixed(2) + ',' + c.z.toFixed(2);
+      const c = est.cubo, m = est.mesita, f = [c.x, c.y, c.z, c.yaw, m.x, m.y].map((v) => v.toFixed(2)).join(',');
       if (f === firma) return false;
       firma = f;
       cubo.position.set(c.x * mm, c.z * mm, -c.y * mm);
+      cubo.rotation.y = c.yaw;
+      mesita.position.set(m.x * mm, M.alto * mm / 2, -m.y * mm);
       return true;
     },
     liberar() { escena.remove(grupo); grupo.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
