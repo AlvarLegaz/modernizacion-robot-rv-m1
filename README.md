@@ -15,7 +15,7 @@ Modernización de un brazo robótico Mitsubishi **Movemaster EX RV-M1** (5 grado
 7. **Pasar el pendant a MQTT,** para que hable con la placa en vez de con el puerto serie.
 8. **Aprendizaje de puntos:** grabar posiciones y reproducir secuencias.
 9. **Coger y dejar un objeto** con la pinza.
-10. *(Opcional)* **Gemelo digital** para el alumnado, con los mismos comandos y topics MQTT.
+10. **Gemelo digital** con los mismos comandos y topics MQTT que el robot real, validado frente a él y usado para formar al alumnado antes de usar el brazo.
 
 ## Estructura del repositorio
 
@@ -27,6 +27,13 @@ docu/
   Propuesta_PFG_RV-M1.pdf   Esta propuesta en PDF
   pendant.png               Captura del pendant en modo simulación
   referencias.md            Manuales y documentación técnica del RV-M1
+  contrato_mqtt.md / .pdf   Contrato MQTT (topics real/gemelo, comandos, ACK, estado, posición)
+investigacion/              Estado del arte: búsquedas, fichas, matriz, huecos
+referencias/refs.bib        Bibliografía verificada
+experimentos/               Protocolos y datos crudos (inmutables)
+analisis/                   Scripts y figuras
+paper/                      Artículo en LaTeX (main.tex, secciones/, build.sh) y PDF
+revisiones/                 Informes de revisión y verificación
 ```
 
 ## Uso rápido
@@ -42,6 +49,22 @@ python rvm1_pendant.py                    # teach pendant gráfico (marca "Simul
 En el pendant hay que **mantener pulsada la barra espaciadora** como dispositivo de habilitación; el jog se hace con las teclas de la derecha o con Q/A, W/S, E/D, R/F, T/G. El modo cartesiano (WORLD) solo se activa tras referenciar el robot (HOME).
 
 ![Teach pendant en simulación](docu/pendant.png)
+
+## Trabajo con agentes (Claude Code)
+
+El repositorio incluye un equipo de agentes para el artículo de investigación. Al clonarlo y abrirlo con Claude Code se cargan solos:
+
+- `CLAUDE.md`: contexto del proyecto, flujo de trabajo y reglas (no inventar referencias ni datos, seguridad del robot, separación productor/revisor).
+- `.claude/agents/`: `investigador`, `verificador-referencias`, `ingeniero`, `analista-experimentos`, `redactor` y `revisor`.
+- `.claude/skills/`: 14 skills, cada agente carga solo las suyas.
+
+Estado actual en `investigacion/estado_del_arte.md`, `investigacion/huecos.md` y `revisiones/`.
+
+```bash
+git clone https://github.com/AlvarLegaz/modernizacion-robot-rv-m1
+cd modernizacion-robot-rv-m1
+claude    # y, por ejemplo: "continúa con la fase 4 del flujo de CLAUDE.md"
+```
 
 ## Avisos
 

@@ -1,0 +1,47 @@
+\section{Protocolo de comunicación MQTT}\label{sec:mqtt}
+
+La comunicación entre el puente RS-232C/MQTT y sus clientes (teach pendant, programas de alumnos, aplicaciones de supervisión y gemelo digital) se define mediante un contrato (versión 0.1, borrador) que fija los topics, el formato de los mensajes y el comportamiento del puente. La regla de diseño es que un cliente solo controla el robot publicando en el topic de comandos; el resto de topics los publica únicamente el puente. Los mensajes son objetos JSON en UTF-8, y \texttt{ts} es una marca de tiempo en milisegundos desde la época Unix.
+
+\subsection{Estructura de topics: robot físico y gemelo digital}
+
+Todos los topics comparten el prefijo \texttt{rvm1/<destino>/<id\_robot>/}, donde \texttt{<destino>} es \texttt{real} para el brazo físico y \texttt{gemelo} para el gemelo digital, y \texttt{<id\_robot>} identifica un robot o una instancia del gemelo digital, por ejemplo por alumno (\texttt{rvm1/gemelo/07/}). La placa de interfaz solo se suscribe a \texttt{rvm1/real/...} y el gemelo digital solo a \texttt{rvm1/gemelo/...}; como los mensajes son idénticos, pasar un programa del gemelo digital al robot físico solo requiere cambiar el destino.
+
+Los cinco topics de cada robot se recogen en la \cref{tab:topics}. Los comandos y los acuses de recibo (\textit{acknowledgements}, ACK) usan QoS~1 para no perder órdenes, y los comandos nunca se retienen, ya que se volverían a ejecutar al reconectar la placa. Por otro lado, el estado, la posición y la conexión sí se retienen, de modo que un cliente que se conecta más tarde recibe los últimos valores. La posición usa QoS~0, ya que se publica periódicamente. Por último, el topic \texttt{online} es la última voluntad (\textit{last will and testament}, LWT) de la placa, así que el broker publica \texttt{"offline"} si la placa se desconecta de forma inesperada.
+
+\begin{table}[t]
+  \centering
+  \caption{Topics MQTT de un robot, con \texttt{rvm1/real/01/} como prefijo. Los mismos topics existen bajo \texttt{rvm1/gemelo/<id\_robot>/} para el gemelo digital.}
+  \label{tab:topics}
+  \small
+  \begin{tabular}{@{}llccl@{}}
+    \toprule
+    Topic & Sentido & QoS & Retain & Contenido \\
+    \midrule
+    \texttt{comandos}         & cliente $\rightarrow$ placa  & 1 & no & Orden a ejecutar \\
+    \texttt{comandos/ack}     & placa $\rightarrow$ cliente  & 1 & no & Acuse de cada orden \\
+    \texttt{actuadores}       & placa $\rightarrow$ clientes & 1 & sí & Estado actual del robot \\
+    \texttt{posicion/mundo}   & placa $\rightarrow$ clientes & 0 & sí & Posición cartesiana del TCP \\
+    \texttt{online}           & placa $\rightarrow$ clientes & 1 & sí & \texttt{"online"}/\texttt{"offline"} (LWT) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Comandos y acuses de recibo}
+
+Cada comando contiene un identificador \texttt{id} elegido por el cliente, \texttt{ts}, \texttt{destino}, el nombre \texttt{cmd} y sus argumentos \texttt{args}. El conjunto es deliberadamente reducido y cada comando se corresponde con uno del RV-M1: \texttt{home} se traduce en \texttt{NT}, \texttt{jog\_articular} (articulación 1--5 y grados) en \texttt{DJ}, \texttt{jog\_mundo} (incrementos $dx$, $dy$, $dz$ en milímetros) en \texttt{DS}, \texttt{mover\_pose} ($x$, $y$, $z$, pitch y roll absolutos) en \texttt{MP}, \texttt{velocidad} (nivel 0--9) en \texttt{SP}, \texttt{pinza} en \texttt{GO} o \texttt{GC}, y \texttt{reset} en \texttt{RS}. El comando \texttt{parar} no tiene equivalente en el RV-M1: vacía la cola de la placa, pero no aborta el movimiento en curso.
+
+Cada comando recibe dos ACK en el topic \texttt{comandos/ack}, ambos con el \texttt{id} del comando. El primero se envía al recibirlo, con el estado \texttt{aceptado} si es válido y se ha encolado, o \texttt{rechazado} junto con un campo \texttt{motivo}: destino que no coincide (\texttt{destino}), JSON no válido, comando desconocido o argumento fuera de rango (\texttt{formato}), comando antiguo (\texttt{caducado}), comando cartesiano sin homing (\texttt{no\_referenciado}), robot en error (\texttt{error\_activo}) o sin comunicación con la controladora (\texttt{desconectado}). El segundo ACK se envía al terminar el comando, con el estado \texttt{hecho} si \texttt{ER} devuelve 0 o \texttt{error} si devuelve 1 o 2, e incluye el valor de \texttt{ER}.
+
+El ACK \texttt{hecho} supone que la controladora no responde a \texttt{ER} hasta terminar el movimiento anterior. \VERIFICAR{que la controladora no responde a \texttt{ER} hasta terminar el movimiento anterior; si no se cumple, el ACK \texttt{hecho} debe basarse en otro criterio.} Los rangos de los argumentos también están pendientes de comprobar. \VERIFICAR{rangos válidos de los argumentos de cada comando.}
+
+\subsection{Estado y posición cartesiana del robot}
+
+El topic \texttt{actuadores} describe el estado del robot visto por la placa; se publica en cada cambio y al menos una vez por segundo, y contiene los campos \texttt{conectado} (comunicación RS-232C con la controladora), \texttt{referenciado} (homing completado sin error desde el último arranque o error de modo~I), \texttt{error} (último valor de \texttt{ER}), \texttt{velocidad} (último \texttt{SP} enviado), \texttt{pinza} (última orden de la pinza, o desconocida), \texttt{ocupado} (hay un comando enviado al robot sin terminar) y \texttt{cola} (comandos pendientes en la placa). Como la controladora no informa del estado de cada motor (corriente, temperatura o ángulo), el topic describe el robot en su conjunto y no cada actuador.
+
+El topic \texttt{posicion/mundo} contiene la posición cartesiana del TCP leída con \texttt{WH}: $x$, $y$ y $z$ en milímetros y pitch y roll en grados. Se publica tras cada movimiento y cada 500~ms en reposo, e incluye el campo \texttt{valida}, falso mientras el robot no está referenciado, ya que sin homing la posición no es fiable. \FALTA{frecuencia de publicación real alcanzada y latencias medidas (de los experimentos).}
+
+\subsection{Mecanismos de seguridad}
+
+El protocolo añade varias comprobaciones antes de que un comando llegue a la controladora. En primer lugar, el campo \texttt{destino} debe coincidir con el del receptor, una segunda comprobación tras el topic para no mover por error el brazo físico con un programa del gemelo digital. En segundo lugar, un comando con más de 500~ms de antigüedad se rechaza como \texttt{caducado}, de modo que un jog retrasado por la red no mueve el robot tarde. Para ello, los relojes de clientes y placa deben estar sincronizados. \FALTA{mecanismo de sincronización de relojes entre clientes y placa (p.~ej., NTP).} En tercer lugar, \texttt{jog\_mundo} y \texttt{mover\_pose} se rechazan mientras el robot no está referenciado, como en el modo WORLD del teach pendant, y cualquier movimiento se rechaza con el robot en error hasta recibir un \texttt{reset}. Por último, la pérdida de comunicación con la controladora se indica con \texttt{conectado} y el motivo \texttt{desconectado}, y la de la propia placa con la LWT de \texttt{online}.
+
+Al igual que en el teach pendant, estos mecanismos solo controlan qué comandos se envían. Por tanto, como \texttt{parar} no detiene un movimiento iniciado, la parada de emergencia física de la controladora o de la T/B-M1 sigue siendo el único medio para detener el brazo de forma inmediata.

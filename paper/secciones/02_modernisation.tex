@@ -1,0 +1,53 @@
+\section{Proceso de modernización}\label{sec:modernisation}
+
+La modernización sigue un enfoque no invasivo: la controladora D/U-M1 original no se modifica y todas las funciones nuevas se añaden fuera de ella a través de su puerto RS-232C. La arquitectura del sistema propuesto se muestra en la \cref{fig:architecture}.
+
+\begin{figure}[t]
+  \centering
+  \FALTA{diagrama de arquitectura: robot RV-M1 + controladora D/U-M1, enlace RS-232C, placa de interfaz (puente RS-232C/MQTT), broker MQTT y clientes (teach pendant, programas de alumnos, gemelo digital), con los prefijos \texttt{rvm1/real/} y \texttt{rvm1/gemelo/}}
+  \caption{Arquitectura del sistema modernizado. La controladora D/U-M1 no se modifica; el puente RS-232C/MQTT la conecta con el broker MQTT y los clientes se dirigen al robot físico o al gemelo digital.}
+  \label{fig:architecture}
+\end{figure}
+
+\subsection{El Mitsubishi Movemaster RV-M1}
+
+El Mitsubishi Movemaster EX RV-M1 es un brazo articulado de cinco grados de libertad: cintura (J1), hombro (J2), codo (J3), cabeceo (J4) y giro (J5) de muñeca. Cada articulación se acciona con un servomotor de corriente continua con escobillas (30~W en J1--J3 y 11~W en J4--J5) a través de un reductor armónico (\textit{harmonic drive}), con una correa dentada adicional en J2, J3 y J4, y J2 y J3 disponen de freno. Cada motor lleva un encoder incremental en cuadratura con canal de índice Z, y la referencia de cada eje se obtiene de un final de carrera combinado con la fase Z. La carga útil es de 1,2~kg con la pinza, la repetibilidad de 0,3~mm y la velocidad máxima de 1000~mm/s en la muñeca.
+
+La controladora D/U-M1, basada en una CPU Z80, ofrece un puerto RS-232C bidireccional, un puerto Centronics que solo transmite del PC al robot y la caja de enseñanza (\textit{teaching box}) T/B-M1. Por tanto, el RS-232C, único canal bidireccional, se eligió como punto de conexión del sistema propuesto.
+
+\subsection{Reparación y puesta en marcha}
+
+La unidad utilizada presentaba un fallo de servo durante el referenciado (\textit{homing}, comando \texttt{NT}), que la controladora indica como error de modo~I (hardware). En este modo la controladora corta la alimentación de los motores, aplica los frenos de J2 y J3 y no acepta movimientos hasta que se rearma el error y se completa un nuevo homing. Como los comandos cartesianos requieren un robot referenciado, esta reparación es previa al resto del trabajo. \FALTA{diagnóstico del fallo de servo en el homing (eje afectado, causa y reparación); la reparación está en curso.}
+
+Una vez que el homing termina sin errores, la puesta en marcha incluye una prueba de la T/B-M1 en modo articular y cartesiano (XYZ). \FALTA{resultado de la prueba de la T/B-M1 en modo articular y XYZ.}
+
+\subsection{Control desde PC por la interfaz RS-232C original}
+
+El primer nivel de control es un módulo en Python que se comunica con la controladora mediante la biblioteca pyserial. Según el manual, el enlace se configura a 9600~baudios, 7 bits de datos, paridad par, 2 bits de parada y control de flujo RTS/CTS, con los comandos terminados en retorno de carro; estos parámetros deben coincidir con los interruptores SW1--SW3 de la controladora. \VERIFICAR{parámetros serie y posición de SW1--SW3 en la controladora real.}
+
+El módulo implementa el subconjunto del lenguaje del RV-M1 necesario en este trabajo: \texttt{NT} (homing), \texttt{DJ} (incremento de una articulación en grados), \texttt{MJ} (movimiento de las cinco articulaciones), \texttt{DS} (movimiento lineal incremental del extremo en milímetros), \texttt{MP} (pose cartesiana absoluta), \texttt{SP} (velocidad, niveles 0--9) y \texttt{GO}/\texttt{GC} (apertura y cierre de la pinza). El estado se lee con \texttt{WH}, que devuelve la posición del punto central de la herramienta (\textit{tool centre point}, TCP) como $(x, y, z, \text{pitch}, \text{roll})$, y con \texttt{ER}, que devuelve 0 sin error, 1 en error de modo~I y 2 en error de modo~II (comando). Tras cada movimiento, el módulo espera 0,5~s y lee \texttt{ER} para detectar un fallo, que se borra con \texttt{RS}. Además, la controladora solo informa de la posición cartesiana del TCP; los ángulos articulares, las corrientes y las temperaturas no están disponibles. \FALTA{resultado de la prueba de comandos, \texttt{WH} y \texttt{ER} con el robot real.}
+
+\subsection{Teach pendant de software}
+
+Sobre este módulo se desarrolló un teach pendant gráfico en Python con Tkinter (\cref{fig:pendant}), cuya disposición sigue la de los pendants industriales actuales (barra de estado, panel de posición, teclas de función y teclado de movimiento manual o \textit{jog}). Su alcance se limita al jog y a la conexión, el homing y el rearme, y la comunicación serie se ejecuta en un hilo independiente con una cola de comandos.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.8\linewidth]{../docu/pendant.png}
+  \caption{Teach pendant de software en modo simulación, tras el homing y con coordenadas WORLD. La barra de estado muestra el modo de operación, el sistema de coordenadas, el incremento de jog, el nivel de velocidad y los estados de referencia y de conexión.}
+  \label{fig:pendant}
+\end{figure}
+
+En coordenadas articulares (JOINT) cada par de teclas envía un \texttt{DJ} a una articulación; en coordenadas cartesianas (WORLD) los tres primeros pares envían \texttt{DS} según $X$, $Y$ y $Z$, y los dos últimos mueven J4 y J5 como articulaciones, ya que el RV-M1 no reorienta la herramienta alrededor del TCP. El jog puede ser por pasos de 0,1, 1 o 5 unidades (mm o grados) o continuo, con un paso de 2 unidades cada 200~ms mientras se mantiene la tecla y solo si la cola está casi vacía.
+
+Por otro lado, se reproducen por software varias seguridades de los pendants industriales. En primer lugar, la barra espaciadora actúa como dispositivo de validación (\textit{enabling device}): al soltarla se detiene el jog y se vacía la cola. En segundo lugar, el modo WORLD queda bloqueado hasta completar \texttt{NT}, y un error de modo~I devuelve el pendant al estado no referenciado. En tercer lugar, la velocidad se fija en el nivel 2 al conectar y tras una parada, con un aviso a partir del nivel 6. Por último, el botón STOP vacía la cola y bloquea el jog hasta su rearme. Este botón solo deja de enviar comandos, ya que el RV-M1 no puede abortar un movimiento por RS-232C; la parada de emergencia sigue siendo la seta física de la controladora o de la T/B-M1.
+
+Para las pruebas sin robot, el pendant incluye un simulador (MockRVM1) con la misma interfaz que el módulo serie, que reproduce el homing, las lecturas de \texttt{WH} y \texttt{ER} y el error de modo~II de \texttt{DS} sin homing con un modelo cinemático simplificado. Por ello sirve para comprobar la lógica de la interfaz y no los movimientos del brazo. \FALTA{resultado de la prueba del pendant con el robot real conectado al PC.}
+
+\subsection{Placa de interfaz}
+
+El siguiente paso sustituye la conexión directa del PC por una placa de interfaz que actúa como puente RS-232C/MQTT. La placa, un ESP32 o una Raspberry Pi con conversor de niveles RS-232, se conecta a la controladora y a un broker MQTT local. Para ello, traduce los comandos MQTT a comandos del RV-M1, los serializa en una cola, comprueba la controladora con \texttt{ER} y publica el estado y la posición del robot según el protocolo de la \cref{sec:mqtt}. De esta forma, los clientes solo hablan MQTT y el enlace serie queda en un único elemento. \FALTA{modelo de placa, conversor RS-232, broker MQTT y red utilizados.}
+
+\subsection{Gemelo digital}
+
+El gemelo digital es el componente del sistema que sustituye al brazo físico y a su controladora, y se encuentra en desarrollo. Comparte exactamente el contrato MQTT de la placa de interfaz y solo cambia el destino (\texttt{gemelo} en lugar de \texttt{real}), con una instancia por alumno si es necesario. Es decir, reproduce el comportamiento de la controladora visto desde el contrato: homing, jog articular y cartesiano, acuses de recibo, estado y posición. Por tanto, un programa puede probarse sobre el gemelo digital y ejecutarse después sobre el robot físico cambiando solo el destino (\cref{sec:mqtt}). La fidelidad del gemelo digital se medirá frente al robot real. \FALTA{herramienta de implementación, modelo cinemático y detalles de implementación del gemelo digital.}

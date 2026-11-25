@@ -1,0 +1,48 @@
+% Borrador del artículo — plantilla genérica.
+% Cuando se elija la revista (RIAI o MDPI), migrar el contenido de secciones/ a su plantilla oficial.
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english,spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[round,authoryear]{natbib}
+\usepackage{authblk}
+\usepackage[hidelinks]{hyperref}
+\usepackage[spanish]{cleveref}
+\crefname{table}{tabla}{tablas}
+\Crefname{table}{Tabla}{Tablas}
+
+% Marcas de trabajo pendiente (se ven en rojo en el PDF; eliminar antes de enviar)
+\newcommand{\FALTA}[1]{\textcolor{red}{\textbf{[FALTA: #1]}}}
+\newcommand{\VERIFICAR}[1]{\textcolor{orange}{\textbf{[VERIFICAR: #1]}}}
+
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,columns=fullflexible}
+
+\title{Modernización no invasiva de un brazo robótico industrial heredado:\\
+puente RS-232C/MQTT y gemelo digital intercambiable para el Mitsubishi Movemaster RV-M1}
+\author[1]{Álvar Ginés Legaz Aparicio}
+\affil[1]{CIFP Politécnico de Cartagena, Cartagena, España}
+\date{\FALTA{fecha de envío}}
+
+\begin{document}
+\maketitle
+
+\input{secciones/00_abstract}
+\input{secciones/01_introduction}
+\input{secciones/02_modernisation}
+\input{secciones/03_mqtt}
+\input{secciones/04_experiments}
+\input{secciones/05_conclusions}
+\input{secciones/99_declarations}
+
+\bibliographystyle{plainnat}
+\bibliography{../referencias/refs}
+
+\end{document}
