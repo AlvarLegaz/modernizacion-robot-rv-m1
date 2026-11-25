@@ -11,10 +11,19 @@ const escribir = (o) => { try { localStorage.setItem(CLAVE, JSON.stringify(o)); 
 // alumno07 → 07; profe → null
 export function idDeUsuario(u) { const m = /(\d+)$/.exec(String(u || '').trim()); return m ? m[1] : null; }
 
+// En el aula (http): ws://<host>:9001. Publicado tras un proxy HTTPS (p. ej. la plataforma Minaya Research en /rvm1/):
+// wss://<host>/<ruta de la página>mqtt, que el proxy reenvía al WebSocket de Mosquitto. Se puede forzar con ?broker=URL.
 export function urlPorDefecto() {
-  const host = (typeof location !== 'undefined' && location.hostname) ? location.hostname : 'localhost';
-  const seguro = typeof location !== 'undefined' && location.protocol === 'https:';
-  return (seguro ? 'wss://' : 'ws://') + host + ':9001';
+  if (typeof location === 'undefined') return 'ws://localhost:9001';
+  try {
+    const forzada = new URLSearchParams(location.search).get('broker');
+    if (forzada) return forzada;
+  } catch (e) { /* sin URLSearchParams */ }
+  if (location.protocol === 'https:') {
+    const dir = location.pathname.replace(/[^/]*$/, '');
+    return 'wss://' + location.host + dir + 'mqtt';
+  }
+  return 'ws://' + (location.hostname || 'localhost') + ':9001';
 }
 
 export function crearBarra(raiz, cb, opc) {

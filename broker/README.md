@@ -198,3 +198,24 @@ Los contenedores Docker usan el reloj del equipo anfitrión: no hay que sincroni
 - La red del aula debe estar **aislada** (contrato v0.2). El tráfico va sin cifrar: las contraseñas de MQTT viajan en claro. Si la red no está aislada hay que usar TLS (MQTT en 8883 y WSS); esta configuración **no** lo incluye todavía.
 - `credenciales_*.csv` contienen las contraseñas en claro: no se suben al repositorio ni se comparten fuera del aula.
 - El broker no sustituye a las seguridades del robot: la parada de emergencia real es la **seta física**.
+
+## Despliegue en Minaya Research (plataforma pública)
+
+El gemelo y este broker también se publican dentro de la plataforma Minaya Research (repo `minaya-plataforma`, rama `gemelo-rvm1`):
+
+1. En el PC de la plataforma, clona o actualiza este repositorio y genera las credenciales: `cd broker && python crear_usuarios.py`.
+2. En `minaya-plataforma/docker/.env` añade `RVM1_DIR=` con la ruta de este repositorio vista desde WSL (p. ej. `/mnt/c/Users/alegaz/Desktop/modernizacion-robot-rv-m1`).
+3. Desde `minaya-plataforma/docker`: `docker compose up -d --build sim-rvm1 mqtt-rvm1 caddy minaya`.
+4. En **Gestión** de la plataforma, da el permiso **Gemelo RV-M1** a los alumnos.
+5. Los alumnos entran en `https://<dominio>/rvm1/`. El gemelo se conecta solo a `wss://<dominio>/rvm1/mqtt` con el usuario y contraseña MQTT del CSV.
+
+Diferencias con el aula: no se publica ningún puerto (todo entra por Caddy en 443), el broker solo es accesible por WebSocket seguro y `/rvm1/hora` da la hora del servidor. Los programas en Python se conectan así:
+
+```python
+import ssl, paho.mqtt.client as mqtt
+c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, transport="websockets")
+c.ws_set_options(path="/rvm1/mqtt")
+c.tls_set(cert_reqs=ssl.CERT_REQUIRED)
+c.username_pw_set("alumno07", "CONTRASEÑA")
+c.connect("minaya-research.duckdns.org", 443)
+```
