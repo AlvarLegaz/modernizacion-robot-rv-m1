@@ -414,5 +414,30 @@ export function crearPendant(raiz) {
   // modo del gemelo (EMULADOR / SOMBRA / SINCRONIZADO) y línea de error gemelo–real; lo fija app.js
   function ponerInfoModo(i) { infoModo = Object.assign({ etiqueta: 'EMULADOR', linea: '', clase: '' }, i || {}); }
 
-  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, get estado() { return st; }, puntos: () => (enlace ? enlace.estado().puntos : []) };
+  // Acciones del mando de juego (js/interfaz/mando.js): hacen lo mismo que pulsar el botón en pantalla y lo iluminan un momento.
+  function accionMando(n, a, b) {
+    const pulsa = (el) => { el.classList.add('pulsada'); setTimeout(() => el.classList.remove('pulsada'), 180); return el; };
+    switch (n) {
+      case 'enable': pulsa(kEnable).click(); break;
+      case 'deshabilitar': setEnable(false); break;
+      case 'stop': pulsa(seta); estop(); break;
+      case 'reset': pulsa(fReset).click(); break;
+      case 'home': pulsa(fHome).click(); break;
+      case 'abrir': pulsa(fGo).click(); break;
+      case 'cerrar': pulsa(fGc).click(); break;
+      case 'he': pulsa(fHe).click(); break;
+      case 'mo': pulsa(fMo).click(); break;
+      case 'coord': pulsa(kCoord).click(); break;
+      case 'modo': pulsa(kMode).click(); break;
+      case 'incr': pulsa(kIncr).click(); break;
+      case 'sp+': pulsa(kMas).click(); break;
+      case 'sp-': pulsa(kMenos).click(); break;
+      case 'punto+': st.punto = st.punto >= 629 ? 1 : st.punto + 1; refrescar(); break;
+      case 'jog': if (!st.jog && jogPress(a, b)) st.jogPuntero = 'mando'; break;
+      case 'jogsoltar': if (st.jogPuntero === 'mando') jogRelease(); break;
+      default: break;
+    }
+  }
+
+  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, mando: accionMando, get estado() { return st; }, puntos: () => (enlace ? enlace.estado().puntos : []) };
 }

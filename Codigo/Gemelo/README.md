@@ -58,6 +58,21 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+## Mando de juego
+
+El pendant también se maneja con un mando (Xbox, PlayStation u otro con disposición «standard»; lo detecta el navegador al pulsar un botón). Cada botón del mando hace **lo mismo que su botón en pantalla** y lo ilumina un instante, así que se puede alternar ratón, dedo y mando. Código en `js/interfaz/mando.js`.
+
+| Mando | Acción | Mando | Acción |
+|---|---|---|---|
+| Start | ENABLE (conmuta) | LT / RT | ABRIR / CERRAR pinza |
+| B | STOP | A / X | HE n / MO n |
+| Back | RESET | LB / RB | COORD / STEP-CONT |
+| Y | HOME | Cruceta ↑ ↓ | SP + / − |
+| Cruceta ← → | Jog J5 − / + | Clic palanca izq. / der. | INCR / punto siguiente |
+| Palanca izquierda | Eje 1 (←→) y eje 2 (↑↓) | Palanca derecha | Eje 3 (↑↓) y eje 4 (←→) |
+
+Las palancas hacen jog de un solo eje a la vez (el de más recorrido); con una zona muerta y una histéresis para evitar saltos. En STEP da un paso por cada empujón y en CONT avanza mientras se mantiene la palanca. **Seguridad:** hace falta ENABLE como con el ratón, y si el mando se desconecta se suelta el jog y se deshabilita el pendant. Con destino REAL valen las mismas precauciones que en el resto del pendant.
+
 ## Pendant en un equipo y vista 3D en otro
 
 Con el broker conectado, la misma página se puede abrir en dos equipos con el mismo id de gemelo:

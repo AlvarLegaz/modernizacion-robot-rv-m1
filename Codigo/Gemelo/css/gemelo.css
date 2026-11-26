@@ -52,6 +52,7 @@ button { font-family: inherit; }
 .ver-visor #principal { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); display: grid; }
 .ver-visor #vista3d { height: 100%; }
 .ver-visor .bc-panel fieldset:not(:first-child), .ver-visor [data-c=modo], .ver-visor label:has([data-c=modo]), .ver-visor .bc-ayuda { display: none; }
+.pd-key.pulsada, .pd-fkey.pulsada, .pd-enable.pulsada, .pd-seta.pulsada { filter: brightness(1.6); outline: 3px solid #7cc4ff; }
 .btn-cubo { right: auto; left: 10px; }
 .btn-prog { right: auto; left: 10px; top: 64px; }
 .btn-prog.on { background: #1f8a4a; }

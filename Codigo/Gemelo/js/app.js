@@ -331,6 +331,17 @@ function fotogramaVisor() {
   if (leyenda.textContent !== txt) leyenda.textContent = txt;
 }
 
+// ------------------------------------------------------------------ mando de juego
+// Cada botón del mando hace lo mismo que su botón en pantalla (js/interfaz/mando.js). En el modo visor no hay pendant, así que no se usa.
+if (ver !== 'visor' && navigator.getGamepads) {
+  const leerMando = () => { for (const g of navigator.getGamepads() || []) if (g && g.connected) return { id: g.id, botones: g.buttons, ejes: g.axes }; return null; };
+  const mando = R.mando.crearMando({
+    leer: leerMando, accion: (n, a, b) => pendant.mando(n, a, b),
+    alCambio: (c, id) => pendant.log(c ? 'Mando conectado: ' + String(id).slice(0, 40) + ' (Start = ENABLE).' : 'Mando desconectado: pendant deshabilitado.')
+  });
+  setInterval(() => mando.tick(), 25);                 // 40 lecturas por segundo (no depende del dibujado)
+}
+
 // ------------------------------------------------------------------ bucles
 // Simulación con setInterval (sigue en segundo plano, aunque el navegador lo ralentice); render con requestAnimationFrame.
 let tPrev = performance.now();
