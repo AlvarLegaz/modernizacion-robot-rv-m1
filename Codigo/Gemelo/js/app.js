@@ -197,10 +197,13 @@ function conectar(c) {
         else publicarOffline();
         if (cliente) transporte.suscribir(cliente.temasLectura);
         if (observador) transporte.suscribir(observador.lista);
+        transporte.suscribir([presentes.TOPIC]);
+        pintarPresentes();
       },
       alDesconectar: () => { barra.estadoBroker('conectando', 'reconectando…'); pasarela.alDesconectar(); },
       alError: (e) => barra.estadoBroker('error', 'error: ' + (e && e.message ? e.message : e)),
       alMensaje: (topic, texto) => {
+        if (topic.endsWith('/online')) { mensajePresentes(topic, texto); return; }
         if (pasarela && topic === pasarela.temas.comandos) { if (modo !== 'sincronizado') pasarela.recibir(topic, texto); }
         else if (observador && observador.lista.includes(topic)) observador.recibir(topic, texto);
         if (cliente && cliente.temasLectura.includes(topic)) cliente.recibir(topic, texto);
@@ -213,6 +216,7 @@ function conectar(c) {
 }
 
 function desconectar(silencioso) {
+  presentes.limpiar(); if (barra) pintarPresentes();
   if (modo !== 'emulador') { cambiarModo('emulador'); barra.ponerModo('emulador'); }
   if (cliente) cambiarDestino('local');
   if (transporte) { transporte.cerrar({ topic: pasarela.temas.online, payload: 'offline', qos: 1, retain: true }); transporte = null; }
@@ -285,6 +289,10 @@ function publicar3d(t) {
   transporte.publicar(pasarela.temas.actuadores.replace(/actuadores$/, 'estado3d'), JSON.stringify(o), { qos: 0, retain: true });
 }
 
+const presentes = R.presentes.crearPresentes();
+function pintarPresentes() { barra.presentes(presentes.lista({ destino: 'gemelo', id: ver === 'visor' ? barra.config().id : idActual })); }
+function mensajePresentes(topic, texto) { if (presentes.actualizar(topic, texto)) pintarPresentes(); }
+
 let ultimo3d = null, rx3d = 0, colVista = 0;
 function conectarVisor(c) {
   if (!window.mqtt) { barra.estadoBroker('error', 'falta lib/mqtt.min.js'); return; }
@@ -295,10 +303,11 @@ function conectarVisor(c) {
     transporte = R.transporteMqtt.crearTransporteMqtt({
       url: c.url, usuario: c.usuario, contrasena: c.contrasena,
       clientId: 'rvm1-visor-' + c.id + '-' + Math.random().toString(16).slice(2, 10),
-      alConectar: () => { barra.estadoBroker('conectado', 'visor · ' + c.url); transporte.suscribir([tema]); },
+      alConectar: () => { barra.estadoBroker('conectado', 'visor · ' + c.url); transporte.suscribir([tema, presentes.TOPIC]); pintarPresentes(); },
       alDesconectar: () => barra.estadoBroker('conectando', 'reconectando…'),
       alError: (e) => barra.estadoBroker('error', 'error: ' + (e && e.message ? e.message : e)),
       alMensaje: (topic, texto) => {
+        if (topic.endsWith('/online')) { mensajePresentes(topic, texto); return; }
         if (topic !== tema) return;
         const o = R.estado3d.leer(texto);
         if (!o) return;
@@ -309,6 +318,7 @@ function conectarVisor(c) {
   } catch (e) { transporte = null; barra.estadoBroker('error', 'error: ' + e.message); }
 }
 function desconectarVisor(silencioso) {
+  presentes.limpiar(); pintarPresentes();
   if (transporte) { transporte.cerrar(); transporte = null; }
   ultimo3d = null;
   if (!silencioso) barra.estadoBroker('desconectado', 'sin conectar');

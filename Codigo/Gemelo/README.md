@@ -58,6 +58,14 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+## Presentes (quién está en línea)
+
+En **Conexión**, tras conectar el broker, el apartado **Presentes (en línea)** lista en vivo los gemelos y los robots reales que están en línea (punto verde) o sin conexión. Sale de los topics `online` retenidos (`rvm1/gemelo/<id>/online` y `rvm1/real/<id>/online`, con última voluntad `offline`) y se actualiza solo. Cada usuario ve lo que su ACL le deja leer: un alumno, su gemelo y los robots reales; `profesor`, todo.
+
+- **Gemelo propio:** «Pendant → gemelo» manda el pendant a tu gemelo por MQTT.
+- **Robot real en línea:** «Pendant → real» (con la misma confirmación de seguridad que el selector «Destino») y «Sincronizar» (la vista 3D sigue al robot real sin moverlo).
+- Así se puede empezar con el gemelo y pasar al robot real después sin tocar los campos a mano. Código en `js/mqtt/presentes.js`.
+
 ## Configuración
 
 El botón **⚙ Configuración** (arriba a la derecha) abre una ventana cuyos cambios se aplican y se guardan al momento en el navegador (`rvm1.ajustes`; botón «Restablecer valores»). Código en `js/modelo/ajustes.js` (valores, límites y almacenamiento) y `js/interfaz/configuracion.js` (ventana).

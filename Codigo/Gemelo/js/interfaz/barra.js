@@ -60,6 +60,10 @@ export function crearBarra(raiz, cb, opc) {
         <div class="bc-botones"><button data-a="conectar" class="bc-prim">Conectar</button></div>
         <p class="bc-ayuda" data-k="ayuda"></p>
       </fieldset>
+      <fieldset><legend>Presentes (en línea)</legend>
+        <div class="bc-presentes" data-k="presentes"><span class="bc-vacio">Conecta el broker para ver quién está en línea.</span></div>
+        <p class="bc-ayuda">Elige a qué conectar el pendant: tu gemelo ahora o, más adelante, el robot real.</p>
+      </fieldset>
       <fieldset><legend>Pendant y robot real</legend>
         <label>Destino
           <select data-c="destino">
@@ -141,6 +145,16 @@ export function crearBarra(raiz, cb, opc) {
   $('[data-a="descargar"]').addEventListener('click', () => { if (cb.alDescargar) cb.alDescargar(cfg.descripcion, cfg.operador); });
   $('[data-a="vaciar"]').addEventListener('click', () => { if (confirm('¿Vaciar el registro de eventos?') && cb.alVaciarRegistro) cb.alVaciarRegistro(); });
 
+  // acciones de la lista de presentes: ponen el valor en el selector y lanzan su 'change' (mismas comprobaciones que a mano)
+  function elegir(destino, idReal) {
+    if (idReal) { cfg.idReal = idReal; campos.idReal.value = idReal; persistir(); }
+    campos.destino.value = destino; campos.destino.dispatchEvent(new Event('change'));
+  }
+  function elegirModo(modo, idReal) {
+    if (idReal) { cfg.idReal = idReal; campos.idReal.value = idReal; persistir(); }
+    campos.modo.value = modo; campos.modo.dispatchEvent(new Event('change'));
+  }
+
   pintarChips();
 
   return {
@@ -153,6 +167,29 @@ export function crearBarra(raiz, cb, opc) {
       $('[data-a="conectar"]').textContent = (estado === 'conectado' || estado === 'conectando') ? 'Desconectar' : 'Conectar';
       if (estado === 'conectando') conectado = true;     // permite cancelar
       ['url', 'usuario', 'contrasena', 'id'].forEach((k) => { campos[k].disabled = estado === 'conectado' || estado === 'conectando'; });
+    },
+    // Lista de presentes: [{ destino:'gemelo'|'real', id, estado:'online'|'offline', propio }]. Los botones reutilizan los selectores de abajo
+    // (con sus avisos y confirmaciones), así que elegir el robot real pide la misma confirmación que hacerlo a mano.
+    presentes(lista) {
+      const cont = chip('presentes');
+      cont.textContent = '';
+      if (!lista.length) { const v = document.createElement('span'); v.className = 'bc-vacio'; v.textContent = conectado ? 'Nadie en línea todavía.' : 'Conecta el broker para ver quién está en línea.'; cont.append(v); return; }
+      const boton = (txt, fn) => { const x = document.createElement('button'); x.type = 'button'; x.textContent = txt; x.addEventListener('click', fn); return x; };
+      for (const p of lista) {
+        const f = document.createElement('div'); f.className = 'bc-pres ' + p.estado;
+        const punto = document.createElement('i'); punto.title = p.estado;
+        const t = document.createElement('span');
+        t.textContent = (p.destino === 'real' ? 'ROBOT REAL ' : 'Gemelo ') + p.id + (p.propio ? ' (este)' : '') + ' · ' + (p.estado === 'online' ? 'en línea' : 'sin conexión');
+        f.append(punto, t);
+        if (p.estado === 'online') {
+          if (p.destino === 'real') {
+            f.append(boton('Pendant → real', () => elegir('real', p.id)), boton('Sincronizar', () => elegirModo('sincronizado', p.id)));
+          } else if (p.propio) {
+            f.append(boton('Pendant → gemelo', () => elegir('gemelo', null)));
+          }
+        }
+        cont.append(f);
+      }
     },
     ponerDestino(d) { cfg.destino = d; campos.destino.value = d; pintarChips(); },
     ponerModo(m) { cfg.modo = m; campos.modo.value = m; pintarChips(); },

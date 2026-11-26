@@ -165,6 +165,7 @@ def generar_acl(ids: list[str], observar_real: bool) -> str:
         if observar_real:
             l.append("topic read rvm1/real/+/posicion/mundo")
             l.append("topic read rvm1/real/+/actuadores")
+            l.append("topic read rvm1/real/+/online")        # para ver en la lista de presentes si el robot está en línea
     l.append("")
     return "\n".join(l)
 
