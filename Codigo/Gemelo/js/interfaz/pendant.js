@@ -20,6 +20,7 @@ const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e
 const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1);
 
 export function crearPendant(raiz) {
+  let velDef = VEL_DEFAULT;                      // velocidad de jog CONT por defecto (ajuste «Configuración»)
   // ------------------------------------------------ estado de máquina (como en rvm1_pendant.py)
   const st = {
     coord: 'JOINT', jogmode: 'STEP', incrIdx: 1, velIdx: VEL_DEFAULT, sp: SP_DEFAULT, estop: false,
@@ -159,7 +160,7 @@ export function crearPendant(raiz) {
     jogRelease();
     if (enlace) enlace.vaciar();
     setSp(SP_DEFAULT, true);
-    st.velIdx = VEL_DEFAULT;
+    st.velIdx = velDef;
     alarm('STOP software: envíos detenidos. RESET (F2) para seguir.');
     refrescar();
   }
@@ -439,5 +440,8 @@ export function crearPendant(raiz) {
     }
   }
 
-  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, mando: accionMando, get estado() { return st; }, puntos: () => (enlace ? enlace.estado().puntos : []) };
+  // velJog: velocidad de jog continuo por defecto (índice de CONT_SPEEDS)
+  function configurar(o) { if (o && Number.isInteger(o.velJog) && o.velJog >= 0 && o.velJog < CONT_SPEEDS.length) { velDef = o.velJog; st.velIdx = o.velJog; } }
+
+  return { ponerEnlace, ponerInfoModo, actualizar, log, alarm, mando: accionMando, configurar, get estado() { return st; }, puntos: () => (enlace ? enlace.estado().puntos : []) };
 }

@@ -1,6 +1,6 @@
 // Mando de juego (Gamepad API) para el pendant: cada botón del mando hace lo mismo que su botón en pantalla, así que se puede usar el
 // ratón, el dedo o el mando indistintamente. Sin DOM: recibe una función que lee el mando y otra que ejecuta acciones del pendant.
-//   const m = crearMando({ leer, accion, alCambio });   m.tick()  (una vez por fotograma)   m.estado() → { conectado, id }
+//   const m = crearMando({ leer, accion, alCambio, umbral });   umbral() → zona muerta de las palancas (0,3–0,9)   m.tick()  (una vez por fotograma)   m.estado() → { conectado, id }
 //   leer() → { id, botones:[{pressed,value}], ejes:[…] } | null            (el primer mando conectado)
 //   accion(nombre, ...args)  nombres: enable, stop, reset, home, abrir, cerrar, he, mo, coord, modo, incr, sp+, sp-, punto+, jog(eje 0..4, signo ±1), jogsoltar, deshabilitar
 //   alCambio(conectado, id)  al conectar o desconectar el mando
@@ -19,10 +19,11 @@
     [B.START]: ['enable'], [B.B]: ['stop'], [B.BACK]: ['reset'], [B.Y]: ['home'], [B.LB]: ['coord'], [B.RB]: ['modo'],
     [B.LT]: ['abrir'], [B.RT]: ['cerrar'], [B.A]: ['he'], [B.X]: ['mo'], [B.UP]: ['sp+'], [B.DOWN]: ['sp-'], [B.LS]: ['incr'], [B.RS]: ['punto+']
   };
-  const UMBRAL_ON = 0.55, UMBRAL_OFF = 0.35;      // histéresis de las palancas
+  const UMBRAL_ON_DEF = 0.55;      // zona muerta por defecto; al soltar la palanca se baja 0,2 (histéresis)
 
   function crearMando(opc) {
     const leer = opc.leer, accion = opc.accion;
+    const umbral = () => (opc.umbral ? Math.min(0.9, Math.max(0.3, opc.umbral())) : UMBRAL_ON_DEF);
     let conectado = false, id = '', previos = [], jog = null;      // jog = [eje, signo] activo por el mando
 
     function soltarJog() { if (jog) { accion('jogsoltar'); jog = null; } }
@@ -53,7 +54,7 @@
       let mejor = null;
       for (const [eje, v] of cand) {
         const a = Math.abs(v), actual = jog && jog[0] === eje;
-        if (a >= (actual ? UMBRAL_OFF : UMBRAL_ON) && (!mejor || a > Math.abs(mejor[1]))) mejor = [eje, v];
+        if (a >= (actual ? umbral() - 0.2 : umbral()) && (!mejor || a > Math.abs(mejor[1]))) mejor = [eje, v];
       }
       if (!mejor) { soltarJog(); return; }
       const signo = mejor[1] > 0 ? 1 : -1;

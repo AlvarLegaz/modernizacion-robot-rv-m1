@@ -58,6 +58,18 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+## Configuración
+
+El botón **⚙ Configuración** (arriba a la derecha) abre una ventana cuyos cambios se aplican y se guardan al momento en el navegador (`rvm1.ajustes`; botón «Restablecer valores»). Código en `js/modelo/ajustes.js` (valores, límites y almacenamiento) y `js/interfaz/configuracion.js` (ventana).
+
+| Apartado | Ajuste |
+|---|---|
+| Pantalla | Qué se ve: pendant y 3D, solo el pendant o solo la vista 3D (ver «Pendant en un equipo y vista 3D en otro»). Cambiarlo recarga la página; `?ver=` en la dirección manda sobre este ajuste |
+| Vista 3D | Mostrar los ejes X, Y, Z y la nave de fondo |
+| Contactos | La mesa y la base son sólidas (el robot se detiene al tocarlas) o solo avisan en rojo |
+| Mando de juego | Activarlo y zona muerta de las palancas (0,3–0,9); indica si hay un mando detectado |
+| Jog | Velocidad de jog continuo con la que empieza el pendant (lenta, media, rápida, máx) |
+
 ## Mando de juego
 
 El pendant también se maneja con un mando (Xbox, PlayStation u otro con disposición «standard»; lo detecta el navegador al pulsar un botón). Cada botón del mando hace **lo mismo que su botón en pantalla** y lo ilumina un instante, así que se puede alternar ratón, dedo y mando. Código en `js/interfaz/mando.js`.

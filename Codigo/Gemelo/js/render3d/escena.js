@@ -57,7 +57,7 @@ export function crearEscena(contenedor, opc) {
   mesa.position.x = 0.15;    // el robot queda hacia el fondo-izquierda de la mesa, con sitio delante para piezas
   escena.add(mesa);
   // nave de taller (suelo, paredes, tuberías, rótulo): ver nave.js
-  crearNave(THREE, escena, { yPiso: -M.altura, mesa: M, mesaX: mesa.position.x, alCambiar: () => pedir() });
+  const nave = crearNave(THREE, escena, { yPiso: -M.altura, mesa: M, mesaX: mesa.position.x, alCambiar: () => pedir() });
 
   // ---- cámara orbital
   const orb = { az: V0.az, el: V0.el, dist: V0.dist, obj: new THREE.Vector3(...V0.obj) };
@@ -145,7 +145,7 @@ export function crearEscena(contenedor, opc) {
   redimensionar(); colocarCamara(); bucle();
 
   return {
-    THREE, escena, camara, renderer, pedir, vistaInicial,
+    THREE, escena, camara, renderer, pedir, vistaInicial, nave,
     alAntesDeRender(fn) { antes.push(fn); },
     renderizarYa() { renderer.render(escena, camara); },
     liberar() { cancelAnimationFrame(rafId); ro.disconnect(); renderer.dispose(); }

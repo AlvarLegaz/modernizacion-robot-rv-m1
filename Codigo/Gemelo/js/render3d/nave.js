@@ -106,6 +106,8 @@ export function crearNave(THREE, escena, opc) {
   }
 
   return {
+    set visible(v) { grupo.visible = !!v; if (opc.alCambiar) opc.alCambiar(); },
+    get visible() { return grupo.visible; },
     liberar() { escena.remove(grupo); for (const r of recursos) if (r.dispose) r.dispose(); }
   };
 }

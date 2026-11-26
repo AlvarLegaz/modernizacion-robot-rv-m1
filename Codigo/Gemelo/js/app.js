@@ -13,6 +13,7 @@ import { crearModeloRVM1 } from './render3d/modelo_rvm1.js';
 import { crearEjes } from './render3d/ejes.js';
 import { crearObjetos } from './render3d/objetos.js';
 import { crearGestorProgramas } from './interfaz/programas.js';
+import { crearConfiguracion } from './interfaz/configuracion.js';
 import { crearPendant } from './interfaz/pendant.js';
 import { crearBarra } from './interfaz/barra.js';
 import { crearEnlaceLocal, crearEnlaceMqtt, crearEnlaceEspejo } from './interfaz/enlaces.js';
@@ -21,7 +22,9 @@ const R = window.RVM1;
 const CFG = R.config;
 const parametros = new URLSearchParams(location.search);
 // ?ver=pendant: solo el pendant (la vista 3D se ve en otro equipo). ?ver=visor: solo la vista 3D, que sigue por MQTT al pendant de rvm1/gemelo/<id>/.
-const ver = ['pendant', 'visor'].includes(parametros.get('ver')) ? parametros.get('ver') : null;
+// Ajustes de la pestaña «Configuración» (guardados en el navegador); «?ver=» en la dirección manda sobre el ajuste «Pantalla».
+let ajustes = R.ajustes.cargar((() => { try { return window.localStorage; } catch (e) { return { getItem: () => null, setItem: () => {} }; } })());
+const ver = ['pendant', 'visor'].includes(parametros.get('ver')) ? parametros.get('ver') : (ajustes.pantalla !== 'ambas' ? ajustes.pantalla : null);
 if (ver) document.body.classList.add('ver-' + ver);
 
 // ------------------------------------------------------------------ modelo headless
@@ -98,11 +101,12 @@ const escena = crearEscena(vista, { vistaInicial, preservar: parametros.has('cap
 const robot = crearModeloRVM1(escena.escena, CFG);
 const fantasma = crearModeloRVM1(escena.escena, CFG, undefined, { fantasma: true });
 fantasma.visible = false;
-crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
+const ejes = crearEjes(escena.THREE, escena.escena, { largo: 0.3 });
 // escena de prácticas: cubo y mesita (modelo headless en modelo/mundo.js; aquí solo se dibuja)
 const mundo = R.mundo.crearMundo({ config: CFG, escena: R.escena });
 const objetos = crearObjetos(escena.THREE, escena.escena, R.escena);
-ctrl.ponerVeto((q, tl) => mundo.bloquea(q, tl));        // la mesa y la base son sólidas: el robot se queda donde toca
+const vetoSolidos = (q, tl) => mundo.bloquea(q, tl);
+ctrl.ponerVeto(ajustes.solidos ? vetoSolidos : null);   // la mesa y la base son sólidas: el robot se queda donde toca
 document.getElementById('btn-cubo').addEventListener('click', () => { mundo.recolocar(); escena.pedir(); });
 // programas: el integrado «Ciclo del cubo» y los del usuario (guardados en el navegador, importables y exportables en JSON; ver js/modelo/programa.js)
 const PR = R.programa;
@@ -336,11 +340,30 @@ function fotogramaVisor() {
 if (ver !== 'visor' && navigator.getGamepads) {
   const leerMando = () => { for (const g of navigator.getGamepads() || []) if (g && g.connected) return { id: g.id, botones: g.buttons, ejes: g.axes }; return null; };
   const mando = R.mando.crearMando({
-    leer: leerMando, accion: (n, a, b) => pendant.mando(n, a, b),
+    umbral: () => ajustes.zonaMuerta, leer: leerMando, accion: (n, a, b) => pendant.mando(n, a, b),
     alCambio: (c, id) => pendant.log(c ? 'Mando conectado: ' + String(id).slice(0, 40) + ' (Start = ENABLE).' : 'Mando desconectado: pendant deshabilitado.')
   });
-  setInterval(() => mando.tick(), 25);                 // 40 lecturas por segundo (no depende del dibujado)
+  window.__estadoMando = () => mando.estado();
+  setInterval(() => { if (ajustes.mando) mando.tick(); else mando.soltarJog(); }, 25);                 // 40 lecturas por segundo (no depende del dibujado)
 }
+
+// ------------------------------------------------------------------ pestaña «Configuración»
+function aplicarAjustes(a, antes) {
+  ejes.visible = a.ejes; escena.nave.visible = a.nave;
+  ctrl.ponerVeto(a.solidos ? vetoSolidos : null);
+  pendant.configurar({ velJog: a.velJog });
+  escena.pedir();
+  if (antes && a.pantalla !== antes.pantalla && !parametros.get('ver')) location.reload();       // cambia qué se ve: recarga
+}
+ajustes = ajustes;                                     // (ya cargados al principio)
+const configuracion = crearConfiguracion({
+  A: R.ajustes, ajustes, almacen: (() => { try { return window.localStorage; } catch (e) { return null; } })(),
+  alCambiar: (a, antes) => { ajustes = a; aplicarAjustes(a, antes); },
+  estadoMando: () => (window.__estadoMando ? window.__estadoMando() : { conectado: false }),
+  velocidades: ['Lenta', 'Media', 'Rápida', 'Máx']
+});
+document.getElementById('btn-config').addEventListener('click', () => configuracion.abrir());
+aplicarAjustes(ajustes, null);
 
 // ------------------------------------------------------------------ bucles
 // Simulación con setInterval (sigue en segundo plano, aunque el navegador lo ralentice); render con requestAnimationFrame.
@@ -420,7 +443,7 @@ if (parametros.has('fantasma')) {
 }
 
 // para depurar desde la consola
-window.gemelo = { ctrl, mundo, programa, gestor, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
+window.gemelo = { ctrl, mundo, programa, gestor, configuracion, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
 // ?medir=1 (pruebas de diseño): anota en <body data-medida> si la página o el pendant desbordan
 if (parametros.has('medir')) {
