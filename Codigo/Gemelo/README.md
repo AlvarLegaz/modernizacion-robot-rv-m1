@@ -58,6 +58,10 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+### Usuario y contraseña por defecto (solo pruebas)
+
+Para no teclearlos en cada prueba, la página carga `js/config_local.js` si existe y rellena en **Conexión** el usuario y la contraseña MQTT (y el id que le corresponde). Ese fichero está en `.gitignore`: **no se sube al repositorio**. Hay una plantilla en `js/config_local.ejemplo.js`. Quien tenga acceso a la página (detrás del login de Minaya) puede leer ese fichero, así que no pongas credenciales reales ahí.
+
 ## Presentes (quién está en línea)
 
 En **Conexión**, tras conectar el broker, el apartado **Presentes (en línea)** lista en vivo los gemelos y los robots reales que están en línea (punto verde) o sin conexión. Sale de los topics `online` retenidos (`rvm1/gemelo/<id>/online` y `rvm1/real/<id>/online`, con última voluntad `offline`) y se actualiza solo. Cada usuario ve lo que su ACL le deja leer: un alumno, su gemelo y los robots reales; `profesor`, todo.

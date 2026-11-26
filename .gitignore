@@ -9,3 +9,6 @@ Codigo/Broker/config/acl
 Codigo/Broker/config/.passwd_*
 Codigo/Broker/mosquitto_local.conf
 Codigo/Broker/data/
+
+# Valores por defecto de pruebas del gemelo (usuario y contraseña MQTT): NO subir
+Codigo/Gemelo/js/config_local.js

@@ -28,9 +28,10 @@ export function urlPorDefecto() {
 
 export function crearBarra(raiz, cb, opc) {
   opc = opc || {};
+  const LOCAL = (typeof window !== 'undefined' && window.RVM1_LOCAL) || {};      // js/config_local.js (opcional, solo pruebas)
   const g = leer();
   const cfg = {
-    url: g.url || urlPorDefecto(), usuario: g.usuario || '', id: g.id || idDeUsuario(g.usuario) || '01', idManual: !!g.idManual,
+    url: g.url || urlPorDefecto(), usuario: LOCAL.usuario || g.usuario || '', id: (LOCAL.usuario && idDeUsuario(LOCAL.usuario)) || g.id || idDeUsuario(g.usuario) || '01', idManual: LOCAL.usuario ? false : !!g.idManual,
     destino: 'local', modo: 'emulador', idReal: g.idReal || '01', operador: g.operador || '', descripcion: g.descripcion || 'sesion'
   };
   // ?id=07 en la URL manda sobre lo recordado y sobre el usuario
@@ -84,7 +85,7 @@ export function crearBarra(raiz, cb, opc) {
   const campos = {};
   raiz.querySelectorAll('[data-c]').forEach((el) => { campos[el.dataset.c] = el; });
   const chip = (k) => raiz.querySelector('[data-k="' + k + '"]');
-  campos.url.value = cfg.url; campos.usuario.value = cfg.usuario; campos.id.value = cfg.id;
+  campos.url.value = cfg.url; campos.usuario.value = cfg.usuario; if (LOCAL.contrasena) campos.contrasena.value = LOCAL.contrasena; campos.id.value = cfg.id;
   campos.destino.value = cfg.destino; campos.modo.value = cfg.modo; campos.idReal.value = cfg.idReal; campos.operador.value = cfg.operador; campos.descripcion.value = cfg.descripcion;
 
   const persistir = () => escribir({ url: cfg.url, usuario: cfg.usuario, id: cfg.id, idManual: cfg.idManual, idReal: cfg.idReal, operador: cfg.operador, descripcion: cfg.descripcion });
