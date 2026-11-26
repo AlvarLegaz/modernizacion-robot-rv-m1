@@ -470,6 +470,8 @@ if (parametros.has('fantasma')) {
   observador = obs; modo = 'sombra';
 }
 
+if (parametros.has('conexion')) document.querySelector('.bc-plegar').click();     // ?conexion=1 (capturas): abre el panel Conexión
+
 // para depurar desde la consola
 window.gemelo = { ctrl, mundo, programa, gestor, configuracion, get ultimo3d() { return ultimo3d; }, get transporte() { return transporte; }, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
