@@ -20,6 +20,9 @@ import { crearEnlaceLocal, crearEnlaceMqtt, crearEnlaceEspejo } from './interfaz
 const R = window.RVM1;
 const CFG = R.config;
 const parametros = new URLSearchParams(location.search);
+// ?ver=pendant: solo el pendant (la vista 3D se ve en otro equipo). ?ver=visor: solo la vista 3D, que sigue por MQTT al pendant de rvm1/gemelo/<id>/.
+const ver = ['pendant', 'visor'].includes(parametros.get('ver')) ? parametros.get('ver') : null;
+if (ver) document.body.classList.add('ver-' + ver);
 
 // ------------------------------------------------------------------ modelo headless
 const ctrl = R.controladora.crearControladora({ config: CFG });
@@ -134,13 +137,14 @@ ctrl.alEvento((ev) => { if (ev.tipo === 'mov_fin' && ev.bloqueado && programa.es
 let progEraActivo = false;
 if (parametros.has('gestor')) gestor.abrir();     // ?gestor=1 (capturas): abre la ventana de programas
 const avisoEl = document.getElementById('aviso-colision');
-let avisoT = 0;
+let avisoT = 0, colSeq = 0, colPiezas = null;
 const NOMBRES = { brazo: 'el brazo', antebrazo: 'el antebrazo', mano: 'la mano', dedos: 'la pinza', cubo: 'el cubo', mesa: 'la mesa', mesita: 'la mesita', base: 'la base' };
 function avisarColision(piezas) {       // la mesa y la base detienen el robot (veto en la controladora, sin error); lo demás se empuja
   const txt = NOMBRES[piezas[0]] + ' con ' + NOMBRES[piezas[1]];
   avisoEl.querySelector('span').textContent = txt;
   avisoEl.classList.add('on'); clearTimeout(avisoT);
   if (!parametros.has('colision')) avisoT = setTimeout(() => avisoEl.classList.remove('on'), 800);      // ?colision=1 (capturas): el aviso se queda
+  colSeq++; colPiezas = piezas;                       // la vista 3D remota (modo visor) también avisa
   pendant.alarm('COLISIÓN: ' + txt + (piezas[1] === 'mesa' || piezas[1] === 'base' ? ' (el robot se ha detenido; sal con jog).' : '.'));
   registro.ev('colision', { piezas });
 }   // referencia visual X (rojo), Y (verde), Z (azul) en el origen de la base
@@ -152,8 +156,8 @@ const enlaceLocal = crearEnlaceLocal(ctrl);
 pendant.ponerEnlace(enlaceLocal);
 
 const barra = crearBarra(document.getElementById('barra'), {
-  alConectar: conectar,
-  alDesconectar: desconectar,
+  alConectar: ver === 'visor' ? conectarVisor : conectar,
+  alDesconectar: ver === 'visor' ? desconectarVisor : desconectar,
   alDestino: cambiarDestino,
   alModo: cambiarModo,
   alDescargar: descargar,
@@ -263,6 +267,70 @@ function descargar(desc, operador) {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
+// ------------------------------------------------------------------ vista 3D remota (estado3d)
+// La página que emula (el pendant) publica rvm1/gemelo/<id>/estado3d; la de ?ver=visor lo lee y solo dibuja. El visor no publica nada.
+let t3d = 0, firma3d = '';
+function publicar3d(t) {
+  if (ver === 'visor' || !transporte || !transporte.conectado || !pasarela || modo === 'sincronizado') return;
+  const quieto = t - t3d >= 1000;                                    // sin cambios, se repite 1 vez por segundo
+  if (!quieto && t - t3d < 60) return;                               // con cambios, como mucho cada 60 ms
+  const o = R.estado3d.construir(ctrl.estado(), mundo.estado(), { seq: colSeq, piezas: colPiezas });
+  const f = R.estado3d.firma(o);
+  if (f === firma3d && !quieto) return;
+  firma3d = f; t3d = t;
+  transporte.publicar(pasarela.temas.actuadores.replace(/actuadores$/, 'estado3d'), JSON.stringify(o), { qos: 0, retain: true });
+}
+
+let ultimo3d = null, rx3d = 0, colVista = 0;
+function conectarVisor(c) {
+  if (!window.mqtt) { barra.estadoBroker('error', 'falta lib/mqtt.min.js'); return; }
+  desconectarVisor(true);
+  barra.estadoBroker('conectando', 'conectando…');
+  const tema = 'rvm1/gemelo/' + c.id + '/estado3d';
+  try {
+    transporte = R.transporteMqtt.crearTransporteMqtt({
+      url: c.url, usuario: c.usuario, contrasena: c.contrasena,
+      clientId: 'rvm1-visor-' + c.id + '-' + Math.random().toString(16).slice(2, 10),
+      alConectar: () => { barra.estadoBroker('conectado', 'visor · ' + c.url); transporte.suscribir([tema]); },
+      alDesconectar: () => barra.estadoBroker('conectando', 'reconectando…'),
+      alError: (e) => barra.estadoBroker('error', 'error: ' + (e && e.message ? e.message : e)),
+      alMensaje: (topic, texto) => {
+        if (topic !== tema) return;
+        const o = R.estado3d.leer(texto);
+        if (!o) return;
+        if (ultimo3d === null) colVista = o.col.seq;                // no avisa por una colisión anterior a conectar
+        ultimo3d = o; rx3d = performance.now();
+      }
+    });
+  } catch (e) { transporte = null; barra.estadoBroker('error', 'error: ' + e.message); }
+}
+function desconectarVisor(silencioso) {
+  if (transporte) { transporte.cerrar(); transporte = null; }
+  ultimo3d = null;
+  if (!silencioso) barra.estadoBroker('desconectado', 'sin conectar');
+}
+function fotogramaVisor() {
+  const idv = barra.config().id;
+  if (ultimo3d) {
+    const o = ultimo3d;
+    if (robot.actualizar({ q: o.q, apertura: o.apertura, tl: o.tl, err: o.err })) escena.pedir();
+    if (objetos.actualizar({ cubo: o.cubo, mesita: o.mesita })) escena.pedir();
+    if (o.col.seq !== colVista) {
+      colVista = o.col.seq;
+      if (o.col.piezas) {
+        avisoEl.querySelector('span').textContent = NOMBRES[o.col.piezas[0]] + ' con ' + NOMBRES[o.col.piezas[1]];
+        avisoEl.classList.add('on'); clearTimeout(avisoT); avisoT = setTimeout(() => avisoEl.classList.remove('on'), 800);
+      }
+    }
+  }
+  const edad = ultimo3d ? performance.now() - rx3d : Infinity;
+  const txt = !transporte || !transporte.conectado ? 'VISOR · sin conexión: abre «Conexión» e introduce usuario y contraseña'
+    : edad === Infinity ? 'VISOR · esperando datos de rvm1/gemelo/' + idv + '/ (¿está abierto el pendant?)'
+    : edad > 3000 ? 'VISOR · sin datos desde hace ' + Math.round(edad / 1000) + ' s (el pendant se ha parado o se ha desconectado)'
+    : 'VISOR · J ' + ultimo3d.q.map((v) => v.toFixed(1)).join('  ');
+  if (leyenda.textContent !== txt) leyenda.textContent = txt;
+}
+
 // ------------------------------------------------------------------ bucles
 // Simulación con setInterval (sigue en segundo plano, aunque el navegador lo ralentice); render con requestAnimationFrame.
 let tPrev = performance.now();
@@ -271,9 +339,10 @@ setInterval(() => {
   const dt = Math.min(1000, t - tPrev); tPrev = t;
   ctrl.avanzar(dt);
   guardarPuntos();
-  if (pasarela && modo !== 'sincronizado') pasarela.tick();
+  if (pasarela && modo !== 'sincronizado' && ver !== 'visor') pasarela.tick();     // el visor no publica nada
   { const ps = programa.estado(); if (progEraActivo && !ps.activo && ps.motivoParada && ps.motivoParada.startsWith('error')) pendant.alarm('Programa «' + progActual.nombre + '» detenido: ' + ps.motivoParada + '. RESET (F2) para seguir.'); progEraActivo = ps.activo; }
   if (programa.estado().activo) { if (pendant.estado.estop || modo === 'sincronizado') programa.parar('STOP o modo sincronizado'); else programa.tick(); }
+  publicar3d(t);
   if (modo !== 'sincronizado') for (const c of mundo.paso(dt, ctrl.estado()).nuevas) avisarColision(c.piezas);
 }, 15);
 
@@ -281,6 +350,7 @@ const aperturaReal = (o) => (o.actuadores && o.actuadores.pinza === 'cerrada' ? 
 const f1 = (v) => (v >= 0 ? '+' : '') + v.toFixed(1);
 let nPrev = -1;
 escena.alAntesDeRender(() => {
+  if (ver === 'visor') { fotogramaVisor(); return; }
   const e = ctrl.estado();
   const o = observador ? observador.estado() : null;
   let info = { etiqueta: 'EMULADOR', linea: '' };

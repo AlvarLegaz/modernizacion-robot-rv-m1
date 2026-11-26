@@ -153,14 +153,14 @@ def generar_acl(ids: list[str], observar_real: bool) -> str:
         l.append(f"topic write rvm1/real/+/{t}")
     l.append("")
     l.append("# Alumnos: su programa publica en comandos; su navegador ejecuta su propio")
-    l.append("# gemelo y publica ack, actuadores, posicion/mundo y online.")
+    l.append("# gemelo y publica ack, actuadores, posicion/mundo, online y estado3d (vista 3D remota).")
     if observar_real:
         l.append("# Además pueden OBSERVAR (solo lectura) el robot real: posición y estado.")
     for i in ids:
         l.append("")
         l.append(f"user alumno{i}")
         l.append(f"topic read rvm1/gemelo/{i}/#")
-        for t in ("comandos", "comandos/ack", "actuadores", "posicion/mundo", "online"):
+        for t in ("comandos", "comandos/ack", "actuadores", "posicion/mundo", "online", "estado3d"):
             l.append(f"topic write rvm1/gemelo/{i}/{t}")
         if observar_real:
             l.append("topic read rvm1/real/+/posicion/mundo")

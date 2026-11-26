@@ -170,6 +170,10 @@ El gemelo funciona en uno de tres modos, que se muestra siempre en su pantalla y
 
 El gemelo **nunca publica en `rvm1/real/...`**. En los modos `sombra` y `sincronizado` registra cada pose real y la propia con marca de tiempo (formato de `registro-experimentos`) para el experimento E2.
 
+## Extensión solo del gemelo: `estado3d`
+
+`rvm1/gemelo/<id>/estado3d` (QoS 0, retain) lo publica la página que emula el robot para que otra página, en modo visor, dibuje el modelo 3D: `{ "v":1, "ts", "q":[5], "apertura", "tl", "err", "cubo":{…}, "mesita":{…}, "col":{ "seq", "piezas" } }`. No existe para el robot real (que no informa de los ángulos de sus ejes) y no forma parte del contrato que debe cumplir la placa. Permiso de escritura: solo el alumno de ese gemelo y `profesor`.
+
 ## Relojes
 
 La caducidad compara el `ts` del cliente con el reloj de la placa, así que todos los equipos deben estar sincronizados por NTP con el mismo servidor de la red del aula. La placa publica en `actuadores` el campo `desfase_ms` (desfase estimado respecto al servidor NTP) y los experimentos lo registran. Si el desfase supera 100 ms, la placa rechaza todos los comandos con motivo `reloj`.

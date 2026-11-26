@@ -58,6 +58,15 @@ Se eligen en la barra de conexión y se ven en la barra de estado del pendant (`
 - Si la pose real no cabe en los límites provisionales del gemelo, el fantasma se dibuja igual con la solución que menos los viola y se avisa ("fuera de límites del gemelo"). Esto sirve para corregir los límites de `config_rvm1.js`.
 - En SOMBRA y SINCRONIZADO, cada `posicion/mundo` recibida del real genera un evento `pos` en el registro con la pose real (y su `ts` de la placa), la pose y las articulaciones del gemelo en ese instante y el error. Es el dato del experimento E2.
 
+## Pendant en un equipo y vista 3D en otro
+
+Con el broker conectado, la misma página se puede abrir en dos equipos con el mismo id de gemelo:
+
+- **Equipo del pendant:** `…/?ver=pendant&id=07`. Solo se ve el pendant (y los botones de práctica). Sigue emulando el robot y publica `rvm1/gemelo/07/estado3d`.
+- **Equipo de la vista 3D:** `…/?ver=visor&id=07`. Solo se ve el modelo 3D, incluidos el cubo, la mesita y el aviso rojo de colisión. Entra con el mismo usuario en «Conexión»; solo lee y **no publica nada** (no hay pendant, ni comandos ni estado).
+
+`estado3d` es un topic **solo del gemelo** (QoS 0, retain, como mucho cada 60 ms al moverse y una vez por segundo parado): ángulos, apertura de la pinza, TL, error, cubo, mesita y último aviso de colisión. Código en `js/mqtt/estado3d.js`. El broker del aula lo permite en la ACL del alumno (`Codigo/Broker/crear_usuarios.py`; tras cambiarlo, `python crear_usuarios.py --conservar` y reiniciar el broker). Si el visor deja de recibir datos durante más de 3 s lo indica en pantalla. Sin `?ver=` la página se comporta como siempre (pendant y 3D juntos).
+
 ## Escena de prácticas: cubo, mesita y colisiones
 
 Sobre la mesa hay un **cubo naranja de 25 mm** y una **mesita azul de 100 × 100 × 40 mm**, alcanzables con la pinza vertical (P = −90°). Posiciones y tolerancias en `js/modelo/config_escena.js` (coordenadas del robot en mm, Z = 0 en la cara superior de la mesa: cubo en X 260, Y −150; mesita en X 260, Y 150). El estado vive en el modelo headless `js/modelo/mundo.js`, así que funciona igual por MQTT desde Python; `js/render3d/objetos.js` solo lo dibuja.
