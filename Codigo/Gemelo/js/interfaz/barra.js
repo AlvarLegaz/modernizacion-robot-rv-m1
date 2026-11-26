@@ -48,7 +48,7 @@ export function crearBarra(raiz, cb, opc) {
     <div class="bc-panel" id="bc-panel" hidden>
       <fieldset><legend>Broker MQTT (opcional)</legend>
         <label>URL <input data-c="url" type="text" spellcheck="false" autocomplete="off" placeholder="ws://host:9001"></label>
-        <label>Usuario <input data-c="usuario" type="text" spellcheck="false" autocomplete="username"></label>
+        <label>Usuario MQTT (alumnoNN, no el de Minaya) <input data-c="usuario" type="text" spellcheck="false" autocomplete="username"></label>
         <label>Contraseña <input data-c="contrasena" type="password" autocomplete="current-password"></label>
         <label>Id gemelo <input data-c="id" type="text" inputmode="numeric" maxlength="8" spellcheck="false"></label>
         <label>Modo del gemelo

@@ -178,6 +178,12 @@ function datosRed() {
   return { broker: cfgBroker ? cfgBroker.url : null, usuario_broker: cfgBroker ? cfgBroker.usuario : null, red: 'anotar (aula aislada / otra)', operador: c.operador || null, id_gemelo: idActual, id_real: c.idReal };
 }
 
+// «Not authorized» casi siempre es que se ha puesto el usuario de Minaya (el correo) en vez del usuario MQTT del aula (alumnoNN o profesor).
+function errorBroker(e) {
+  const m = e && e.message ? e.message : String(e);
+  return /not authori[sz]ed|bad user/i.test(m) ? 'usuario o contraseña MQTT incorrectos (no son los de Minaya: usa alumnoNN y su clave, de credenciales_alumnos.csv)' : 'error: ' + m;
+}
+
 // El broker solo deja a alumnoNN trabajar con rvm1/gemelo/NN/: con otro id lo que publique o lea se descarta en silencio, y «no se mueve».
 function idIncoherente(c) {
   const m = /^alumno(\d+)$/.exec(c.usuario || '');
@@ -208,7 +214,7 @@ function conectar(c) {
         pintarPresentes();
       },
       alDesconectar: () => { barra.estadoBroker('conectando', 'reconectando…'); pasarela.alDesconectar(); },
-      alError: (e) => barra.estadoBroker('error', 'error: ' + (e && e.message ? e.message : e)),
+      alError: (e) => barra.estadoBroker('error', errorBroker(e)),
       alMensaje: (topic, texto) => {
         if (topic.endsWith('/online')) { mensajePresentes(topic, texto); return; }
         if (pasarela && topic === pasarela.temas.comandos) { if (modo !== 'sincronizado') pasarela.recibir(topic, texto); }
@@ -313,7 +319,7 @@ function conectarVisor(c) {
       clientId: 'rvm1-visor-' + c.id + '-' + Math.random().toString(16).slice(2, 10),
       alConectar: () => { barra.estadoBroker('conectado', 'visor · ' + c.url); transporte.suscribir([tema, presentes.TOPIC]); pintarPresentes(); },
       alDesconectar: () => barra.estadoBroker('conectando', 'reconectando…'),
-      alError: (e) => barra.estadoBroker('error', 'error: ' + (e && e.message ? e.message : e)),
+      alError: (e) => barra.estadoBroker('error', errorBroker(e)),
       alMensaje: (topic, texto) => {
         if (topic.endsWith('/online')) { mensajePresentes(topic, texto); return; }
         if (topic !== tema) return;
