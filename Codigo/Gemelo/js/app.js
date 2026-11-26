@@ -178,7 +178,14 @@ function datosRed() {
   return { broker: cfgBroker ? cfgBroker.url : null, usuario_broker: cfgBroker ? cfgBroker.usuario : null, red: 'anotar (aula aislada / otra)', operador: c.operador || null, id_gemelo: idActual, id_real: c.idReal };
 }
 
+// El broker solo deja a alumnoNN trabajar con rvm1/gemelo/NN/: con otro id lo que publique o lea se descarta en silencio, y «no se mueve».
+function idIncoherente(c) {
+  const m = /^alumno(\d+)$/.exec(c.usuario || '');
+  return m && m[1] !== String(c.id) ? 'el usuario ' + c.usuario + ' solo puede usar el id ' + m[1] + ' (ahora pone ' + c.id + '): corrige el id' : null;
+}
+
 function conectar(c) {
+  const malId = idIncoherente(c); if (malId) { barra.estadoBroker('error', malId); return; }
   if (!window.mqtt) { barra.estadoBroker('error', 'falta lib/mqtt.min.js'); return; }
   desconectar(true);
   cfgBroker = c;
@@ -295,6 +302,7 @@ function mensajePresentes(topic, texto) { if (presentes.actualizar(topic, texto)
 
 let ultimo3d = null, rx3d = 0, colVista = 0;
 function conectarVisor(c) {
+  const malId = idIncoherente(c); if (malId) { barra.estadoBroker('error', malId); return; }
   if (!window.mqtt) { barra.estadoBroker('error', 'falta lib/mqtt.min.js'); return; }
   desconectarVisor(true);
   barra.estadoBroker('conectando', 'conectando…');
@@ -457,7 +465,7 @@ if (parametros.has('fantasma')) {
 }
 
 // para depurar desde la consola
-window.gemelo = { ctrl, mundo, programa, gestor, configuracion, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
+window.gemelo = { ctrl, mundo, programa, gestor, configuracion, get ultimo3d() { return ultimo3d; }, get transporte() { return transporte; }, registro, get pasarela() { return pasarela; }, get observador() { return observador; }, pendant, escena };
 
 // ?medir=1 (pruebas de diseño): anota en <body data-medida> si la página o el pendant desbordan
 if (parametros.has('medir')) {
