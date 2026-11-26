@@ -24,7 +24,7 @@ const parametros = new URLSearchParams(location.search);
 // ?ver=pendant: solo el pendant (la vista 3D se ve en otro equipo). ?ver=visor: solo la vista 3D, que sigue por MQTT al pendant de rvm1/gemelo/<id>/.
 // Ajustes de la pestaña «Configuración» (guardados en el navegador); «?ver=» en la dirección manda sobre el ajuste «Pantalla».
 let ajustes = R.ajustes.cargar((() => { try { return window.localStorage; } catch (e) { return { getItem: () => null, setItem: () => {} }; } })());
-const ver = ['pendant', 'visor'].includes(parametros.get('ver')) ? parametros.get('ver') : (ajustes.pantalla !== 'ambas' ? ajustes.pantalla : null);
+const ver = parametros.get('ver') === 'ambas' ? null : ['pendant', 'visor'].includes(parametros.get('ver')) ? parametros.get('ver') : (ajustes.pantalla !== 'ambas' ? ajustes.pantalla : null);   // ?ver=ambas fuerza pendant + 3D juntos
 if (ver) document.body.classList.add('ver-' + ver);
 
 // ------------------------------------------------------------------ modelo headless
