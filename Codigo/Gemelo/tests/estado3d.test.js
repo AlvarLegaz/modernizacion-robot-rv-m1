@@ -16,6 +16,14 @@ test('estado3d: construir, firma y leer (ida y vuelta)', () => {
   assert.notEqual(E3.firma(o), E3.firma(E3.construir(Object.assign({}, est, { apertura: 1 }), mundo, { seq: 3 }, 1000)));
 });
 
+test('estado3d: la sesión viaja en el mensaje para distinguir emuladores', () => {
+  const o = E3.construir(est, mundo, null, 1, 'abc123');
+  assert.equal(o.ses, 'abc123');
+  assert.equal(E3.leer(JSON.stringify(o)).ses, 'abc123');
+  assert.equal(E3.leer(JSON.stringify({ ...o, ses: undefined })).ses, '');
+  assert.notEqual(E3.firma(o), E3.firma(E3.construir(est, mundo, null, 1, 'otra')), 'otra sesión = otra firma');
+});
+
 test('estado3d: rechaza datos que no son un estado válido', () => {
   const ok = JSON.parse(JSON.stringify(E3.construir(est, mundo, null, 1)));
   for (const mal of ['no json', '{}', JSON.stringify({ ...ok, v: 2 }), JSON.stringify({ ...ok, q: [1, 2, 3] }), JSON.stringify({ ...ok, q: [1, 2, 3, 4, 'x'] }),

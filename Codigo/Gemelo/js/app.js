@@ -210,13 +210,14 @@ function conectar(c) {
         else publicarOffline();
         if (cliente) transporte.suscribir(cliente.temasLectura);
         if (observador) transporte.suscribir(observador.lista);
-        transporte.suscribir([presentes.TOPIC]);
+        transporte.suscribir([presentes.TOPIC, pasarela.temas.actuadores.replace(/actuadores$/, 'estado3d')]);
         pintarPresentes();
       },
       alDesconectar: () => { barra.estadoBroker('conectando', 'reconectando…'); pasarela.alDesconectar(); },
       alError: (e) => barra.estadoBroker('error', errorBroker(e)),
       alMensaje: (topic, texto) => {
         if (topic.endsWith('/online')) { mensajePresentes(topic, texto); return; }
+        if (topic.endsWith('/estado3d')) { detectarOtroEmulador(texto); return; }
         if (pasarela && topic === pasarela.temas.comandos) { if (modo !== 'sincronizado') pasarela.recibir(topic, texto); }
         else if (observador && observador.lista.includes(topic)) observador.recibir(topic, texto);
         if (cliente && cliente.temasLectura.includes(topic)) cliente.recibir(topic, texto);
@@ -290,12 +291,13 @@ function descargar(desc, operador) {
 
 // ------------------------------------------------------------------ vista 3D remota (estado3d)
 // La página que emula (el pendant) publica rvm1/gemelo/<id>/estado3d; la de ?ver=visor lo lee y solo dibuja. El visor no publica nada.
-let t3d = 0, firma3d = '';
+const SESION = Math.random().toString(36).slice(2, 8);      // identifica a esta página como emuladora del gemelo
+let t3d = 0, firma3d = '', otroEmulador = 0, avisadoOtro = -1e9;
 function publicar3d(t) {
   if (ver === 'visor' || !transporte || !transporte.conectado || !pasarela || modo === 'sincronizado') return;
   const quieto = t - t3d >= 1000;                                    // sin cambios, se repite 1 vez por segundo
   if (!quieto && t - t3d < 60) return;                               // con cambios, como mucho cada 60 ms
-  const o = R.estado3d.construir(ctrl.estado(), mundo.estado(), { seq: colSeq, piezas: colPiezas });
+  const o = R.estado3d.construir(ctrl.estado(), mundo.estado(), { seq: colSeq, piezas: colPiezas }, undefined, SESION);
   const f = R.estado3d.firma(o);
   if (f === firma3d && !quieto) return;
   firma3d = f; t3d = t;
@@ -306,7 +308,18 @@ const presentes = R.presentes.crearPresentes();
 function pintarPresentes() { barra.presentes(presentes.lista({ destino: 'gemelo', id: ver === 'visor' ? barra.config().id : idActual })); }
 function mensajePresentes(topic, texto) { if (presentes.actualizar(topic, texto)) pintarPresentes(); }
 
-let ultimo3d = null, rx3d = 0, colVista = 0;
+// Dos páginas emulando el mismo gemelo publican estados distintos y la vista 3D salta de uno a otro: se avisa.
+function detectarOtroEmulador(texto) {
+  const o = R.estado3d.leer(texto);
+  if (!o || !o.ses || o.ses === SESION) return;
+  otroEmulador = performance.now();
+  if (otroEmulador - avisadoOtro > 15000) {
+    avisadoOtro = otroEmulador;
+    pendant.alarm('HAY OTRA PÁGINA emulando el gemelo ' + (idActual || '') + ' con este mismo usuario: cierra una de las dos (se mezclan sus datos y la vista 3D da saltos).');
+  }
+}
+
+let ultimo3d = null, rx3d = 0, colVista = 0, ses3d = '', otraSes = 0, qVis = null, aperVis = 1, tVis = performance.now();
 function conectarVisor(c) {
   const malId = idIncoherente(c); if (malId) { barra.estadoBroker('error', malId); return; }
   if (!window.mqtt) { barra.estadoBroker('error', 'falta lib/mqtt.min.js'); return; }
@@ -325,6 +338,12 @@ function conectarVisor(c) {
         if (topic !== tema) return;
         const o = R.estado3d.leer(texto);
         if (!o) return;
+        const ahora = performance.now();
+        if (ses3d && o.ses && o.ses !== ses3d) {          // otra página emula el mismo gemelo: el visor sigue solo a la primera
+          otraSes = ahora;
+          if (ahora - rx3d < 2500) return;
+        }
+        ses3d = o.ses;
         if (ultimo3d === null) colVista = o.col.seq;                // no avisa por una colisión anterior a conectar
         ultimo3d = o; rx3d = performance.now();
       }
@@ -345,7 +364,13 @@ function fotogramaVisor() {
   }
   if (ultimo3d) {
     const o = ultimo3d;
-    if (robot.actualizar({ q: o.q, apertura: o.apertura, tl: o.tl, err: o.err })) escena.pedir();
+    // suavizado: el pendant manda ~15 estados por segundo y la pantalla pinta 60; se acerca al último recibido para que no vaya a saltos
+    const t = performance.now(), dtv = Math.min(200, t - tVis); tVis = t;
+    const kv = 1 - Math.exp(-dtv / 55);
+    if (!qVis || o.q.some((v, i) => Math.abs(v - qVis[i]) > 40)) qVis = o.q.slice();
+    else qVis = qVis.map((v, i) => (Math.abs(o.q[i] - v) < 0.02 ? o.q[i] : v + (o.q[i] - v) * kv));
+    aperVis = Math.abs(o.apertura - aperVis) < 0.002 ? o.apertura : aperVis + (o.apertura - aperVis) * kv;
+    if (robot.actualizar({ q: qVis, apertura: aperVis, tl: o.tl, err: o.err })) escena.pedir();
     if (objetos.actualizar({ cubo: o.cubo, mesita: o.mesita })) escena.pedir();
     if (o.col.seq !== colVista) {
       colVista = o.col.seq;
@@ -356,10 +381,11 @@ function fotogramaVisor() {
     }
   }
   const edad = ultimo3d ? performance.now() - rx3d : Infinity;
+  const dos = performance.now() - otraSes < 3000;
   const txt = !transporte || !transporte.conectado ? 'VISOR · sin conexión: abre «Conexión» e introduce usuario y contraseña'
     : edad === Infinity ? 'VISOR · esperando datos de rvm1/gemelo/' + idv + '/ (¿está abierto el pendant?)'
     : edad > 3000 ? 'VISOR · sin datos desde hace ' + Math.round(edad / 1000) + ' s (el pendant se ha parado o se ha desconectado)'
-    : 'VISOR · J ' + ultimo3d.q.map((v) => v.toFixed(1)).join('  ');
+    : (dos ? 'VISOR · ¡HAY DOS PÁGINAS emulando este gemelo! Cierra la que sobre · ' : 'VISOR · ') + 'J ' + ultimo3d.q.map((v) => v.toFixed(1)).join('  ');
   if (leyenda.textContent !== txt) leyenda.textContent = txt;
 }
 
