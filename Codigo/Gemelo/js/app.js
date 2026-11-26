@@ -166,7 +166,7 @@ const barra = crearBarra(document.getElementById('barra'), {
   alModo: cambiarModo,
   alDescargar: descargar,
   alVaciarRegistro: () => { registro.vaciar(); notaInicial(datosRed()); }
-}, { idUrl: parametros.get('id') });
+}, { idUrl: parametros.get('id'), vista: ver || 'ambas' });
 crearPasarelaPara(barra.config().id);
 medirHora();
 setInterval(medirHora, CFG.contrato.periodo_hora_ms);

@@ -18,6 +18,9 @@ button { font-family: inherit; }
 /* ------------------------------------------------------------------ barra de conexión */
 .barra { position: relative; z-index: 20; background: #0d0f12; color: #c9ced5; border-bottom: 1px solid #262a30; font-size: 13px; }
 .bc-linea { height: var(--alto-barra); display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; white-space: nowrap; overflow: hidden; }
+.bc-vistas { display: flex; gap: 4px; }
+.bc-vistas a { padding: 4px 10px; border-radius: 6px; border: 1px solid #3a4452; color: #c9d1da; font-size: 12px; text-decoration: none; }
+.bc-vistas a.act { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
 .bc-titulo { font-weight: 700; color: #fff; letter-spacing: .02em; }
 .bc-chip { padding: 2px 8px; border-radius: 10px; background: #1f2329; color: #aeb5be; font-size: 12px; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .bc-chip.ok { background: #143d27; color: #8ff0b6; }

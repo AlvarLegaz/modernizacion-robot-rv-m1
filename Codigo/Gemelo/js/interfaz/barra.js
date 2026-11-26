@@ -38,9 +38,15 @@ export function crearBarra(raiz, cb, opc) {
   if (opc.idUrl) { cfg.id = String(opc.idUrl).replace(/[^A-Za-z0-9_-]/g, '') || cfg.id; cfg.idManual = true; }
   // el destino 'real' nunca se recupera solo al recargar: siempre se arranca en local
 
+  // Tres vistas de la misma página: todo junto, solo el pendant o solo el robot 3D (cada una con su ?ver=)
+  const VISTAS = [['ambas', 'Pendant + 3D'], ['pendant', 'Solo pendant'], ['visor', 'Solo robot 3D']];
+  let vistaActual = 'ambas';
+  try { const v = new URLSearchParams(location.search).get('ver'); if (VISTAS.some((x) => x[0] === v)) vistaActual = v; else if (opc.vista) vistaActual = opc.vista; } catch (e) { /* sin location */ }
+
   raiz.innerHTML = `
     <div class="bc-linea">
       <span class="bc-titulo">RV-M1 · gemelo digital</span>
+      <nav class="bc-vistas" aria-label="Vista">${VISTAS.map(([v, t]) => `<a href="?ver=${v}"${v === vistaActual ? ' class="act" aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
       <span class="bc-chip" data-k="broker">broker: sin conectar</span>
       <span class="bc-chip" data-k="topic"></span>
       <span class="bc-chip" data-k="pendant"></span>
