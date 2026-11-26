@@ -14,7 +14,7 @@ Casilla marcada = hecha y verificada; sin marcar = pendiente. Se actualiza al ce
 - [ ] **4.** **Probar el pendant de software** (`rvm1_pendant.py`) con el robot real, conectado directamente al PC.
 - [ ] **5.** **Desarrollar la placa de interfaz:** implementar una pasarela basada en ESP32 con comunicación WiFi/MQTT, conversor de niveles RS-232C (MAX3232) y una interfaz de parada eléctrica aislada y supervisada, conectada a la entrada `EXT. EMG. STOP` de la controladora D/U-M1, cuya disponibilidad y comportamiento deberán verificarse en la unidad real. **Requisito indispensable de seguridad:** la placa solo permite el movimiento mientras recibe el **latido** de la aplicación; si falta, abre el circuito de parada por sí misma, sin depender del broker, con fallo seguro en hardware y rearme manual (contrato MQTT, sección 5). No es una función certificada y no sustituye a las setas físicas.
 
-   ![Arquitectura conceptual de control y parada remota](docu/arquitectura_control_parada_remota.jpg)
+   ![Arquitectura conceptual de control y parada remota](Docu/arquitectura_control_parada_remota.jpg)
 
    *Arquitectura conceptual de la placa: canal de control RS-232C y canal de solicitud de parada eléctrica independiente del intérprete serie. Se mantienen las setas físicas independientes. El STOP remoto por WiFi/MQTT es complementario y no constituye por sí solo una función de seguridad certificada.*
 
@@ -28,23 +28,25 @@ Casilla marcada = hecha y verificada; sin marcar = pendiente. Se actualiza al ce
 ## Estructura del repositorio
 
 ```
-codigo/
-  rvm1_control.py    Control por RS-232C desde consola (jog articular y cartesiano, WH, ER...)
-  rvm1_pendant.py    Teach pendant gráfico (Tkinter) con aspecto y manejo de pendant industrial
-docu/
+Codigo/
+  Gemelo/              Gemelo digital web (3D + teach pendant, contrato MQTT como rvm1/gemelo/<id>/); ver Codigo/Gemelo/README.md
+  PCB_Interfaz/        Placa de interfaz ESP32 (esquemas, firmware y fabricación); ver su README
+  Software_Control/
+    rvm1_control.py    Control por RS-232C desde consola (jog articular y cartesiano, WH, ER...)
+    rvm1_pendant.py    Teach pendant gráfico (Tkinter) con aspecto y manejo de pendant industrial
+  Broker/              Servidor MQTT del aula (Mosquitto, usuarios y ACL) y web del gemelo; ver Codigo/Broker/README.md
+Investigacion/
+  Paper/               Artículo en LaTeX (main.tex, secciones/, build.sh) y PDF
+  Estado_del_Arte/     Búsquedas, fichas, matriz, huecos y síntesis
+  Referencias/         refs.bib: bibliografía verificada
+  Revisiones/          Informes de revisión y verificación
+  Experimentos/        Protocolos, datos crudos (inmutables) y analisis/ (scripts y figuras)
+Docu/
   Propuesta_PFG_RV-M1.pdf   Esta propuesta en PDF
-  pendant.png               Captura del pendant en modo simulación
-  arquitectura_control_parada_remota.jpg  Diseño conceptual de la nueva placa
+  contrato_mqtt.md / .pdf   Contrato MQTT (topics real/gemelo, comandos, ACK, estado, posición, latido)
   referencias.md            Manuales y documentación técnica del RV-M1
-  contrato_mqtt.md / .pdf   Contrato MQTT (topics real/gemelo, comandos, ACK, estado, posición)
-gemelo/                     Gemelo digital web (3D + teach pendant, contrato MQTT como rvm1/gemelo/<id>/); ver gemelo/README.md
-broker/                     Servidor MQTT del aula (Mosquitto, usuarios y ACL) y web del gemelo; ver broker/README.md
-investigacion/              Estado del arte: búsquedas, fichas, matriz, huecos
-referencias/refs.bib        Bibliografía verificada
-experimentos/               Protocolos y datos crudos (inmutables)
-analisis/                   Scripts y figuras
-paper/                      Artículo en LaTeX (main.tex, secciones/, build.sh) y PDF
-revisiones/                 Informes de revisión y verificación
+  arquitectura_control_parada_remota.jpg, pendant.png   Imágenes
+  encargos/                 Encargos de trabajo para los agentes
 ```
 
 ## Uso rápido
@@ -59,7 +61,7 @@ python rvm1_pendant.py                    # teach pendant gráfico (marca "Simul
 
 En el pendant hay que **mantener pulsada la barra espaciadora** como dispositivo de habilitación; el jog se hace con las teclas de la derecha o con Q/A, W/S, E/D, R/F, T/G. El modo cartesiano (WORLD) solo se activa tras referenciar el robot (HOME).
 
-![Teach pendant en simulación](docu/pendant.png)
+![Teach pendant en simulación](Docu/pendant.png)
 
 ## Trabajo con agentes (Claude Code)
 
@@ -69,7 +71,7 @@ El repositorio incluye un equipo de agentes para el artículo de investigación.
 - `.claude/agents/`: `investigador`, `verificador-referencias`, `ingeniero`, `analista-experimentos`, `redactor` y `revisor`.
 - `.claude/skills/`: 14 skills, cada agente carga solo las suyas.
 
-Estado actual en `investigacion/estado_del_arte.md`, `investigacion/huecos.md` y `revisiones/`.
+Estado actual en `Investigacion/Estado_del_Arte/estado_del_arte.md`, `Investigacion/Estado_del_Arte/huecos.md` y `Investigacion/Revisiones/`.
 
 ```bash
 git clone https://github.com/AlvarLegaz/modernizacion-robot-rv-m1

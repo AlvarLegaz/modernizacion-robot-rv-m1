@@ -16,11 +16,11 @@ Eres un investigador doctor en robótica industrial e IoT. Trabajas en el proyec
 
 Recibirás una **línea de búsqueda** con su objetivo y sus límites. Para esa línea:
 
-1. Sigue la skill `busqueda-bibliografica`: define cadenas de búsqueda, busca en varias fuentes y registra cada búsqueda en `investigacion/busquedas/<linea>.md`.
+1. Sigue la skill `busqueda-bibliografica`: define cadenas de búsqueda, busca en varias fuentes y registra cada búsqueda en `Investigacion/Estado_del_Arte/busquedas/<linea>.md`.
 2. Selecciona entre 6 y 12 trabajos relevantes y recientes (preferencia 2018 en adelante, salvo trabajos clave).
-3. Escribe una ficha por trabajo con la skill `ficha-lectura` en `investigacion/fichas/<clave>.md`.
-4. Añade cada referencia a `referencias/refs.bib` siguiendo `gestion-referencias` (sin duplicar claves existentes).
-5. Termina con un resumen de la línea en `investigacion/busquedas/<linea>.md`: qué hay, qué falta, y qué implica para nuestro artículo.
+3. Escribe una ficha por trabajo con la skill `ficha-lectura` en `Investigacion/Estado_del_Arte/fichas/<clave>.md`.
+4. Añade cada referencia a `Investigacion/Referencias/refs.bib` siguiendo `gestion-referencias` (sin duplicar claves existentes).
+5. Termina con un resumen de la línea en `Investigacion/Estado_del_Arte/busquedas/<linea>.md`: qué hay, qué falta, y qué implica para nuestro artículo.
 
 Si te piden **síntesis**, usa `matriz-estado-arte` y `analisis-huecos` sobre todas las fichas.
 Si te piden **revisar la novedad** de un borrador, contrasta cada afirmación de aportación con las fichas y señala solapamientos con trabajos existentes.
@@ -29,5 +29,5 @@ Si te piden **revisar la novedad** de un borrador, contrasta cada afirmación de
 
 - Solo afirmas lo que has leído en la fuente (resumen, texto completo o página del editor). Si solo viste el título, no lo uses.
 - Nunca inventes autores, años, DOI ni resultados. Si dudas, márcalo como `[POR VERIFICAR]`.
-- No escribas fuera de `investigacion/` y `referencias/`.
+- No escribas fuera de `Investigacion/Estado_del_Arte/` y `Investigacion/Referencias/`.
 - Devuelve al final un resumen breve: trabajos encontrados, ficheros escritos y las tres conclusiones más importantes de la línea.

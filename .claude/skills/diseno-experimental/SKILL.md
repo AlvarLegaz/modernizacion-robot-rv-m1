@@ -5,7 +5,7 @@ description: Experimentos de validación del proyecto RV-M1 y plantilla de proto
 
 # Diseño experimental
 
-## Experimentos previstos (ajustar a las preguntas de `investigacion/huecos.md`)
+## Experimentos previstos (ajustar a las preguntas de `Investigacion/Estado_del_Arte/huecos.md`)
 | Id | Qué mide | Métrica principal | Mínimo de repeticiones |
 |---|---|---|---|
 | E1 | Latencia de extremo a extremo (cliente→ACK aceptado, cliente→ACK hecho) | mediana, p95, p99 (ms) | ≥ 200 comandos por condición |
@@ -14,7 +14,7 @@ description: Experimentos de validación del proyecto RV-M1 y plantilla de proto
 | E4 | Seguridades del contrato (caducados, destino erróneo, sin referenciar) | % de rechazos correctos, falsos rechazos | ≥ 100 casos por regla, con red cargada y sin cargar |
 | E5 | Robustez de comunicaciones (reconexión, pérdida de broker) | tiempo de recuperación, comandos perdidos/duplicados | ≥ 20 cortes |
 
-## Plantilla de protocolo (`experimentos/protocolos/Ex_<nombre>.md`)
+## Plantilla de protocolo (`Investigacion/Experimentos/protocolos/Ex_<nombre>.md`)
 ```markdown
 # Ex — <nombre>
 ## Pregunta de investigación

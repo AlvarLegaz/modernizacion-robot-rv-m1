@@ -5,8 +5,8 @@ description: Normas para analizar los datos experimentales del proyecto RV-M1 co
 
 # Análisis de datos
 
-- Scripts en `analisis/` (`analizar_E1.py`, …). Leen de `experimentos/datos_crudos/` y escriben en `analisis/resultados/` (tablas CSV) y `analisis/figuras/` (PDF vectorial + PNG 300 ppp).
-- Un `analisis/README.md` indica cómo regenerarlo todo y las versiones de librerías (`requirements.txt`).
+- Scripts en `Investigacion/Experimentos/analisis/` (`analizar_E1.py`, …). Leen de `Investigacion/Experimentos/datos_crudos/` y escriben en `Investigacion/Experimentos/analisis/resultados/` (tablas CSV) y `Investigacion/Experimentos/analisis/figuras/` (PDF vectorial + PNG 300 ppp).
+- Un `Investigacion/Experimentos/analisis/README.md` indica cómo regenerarlo todo y las versiones de librerías (`requirements.txt`).
 - Si se procesan muchos ficheros, barra de progreso con `tqdm`.
 - Estadística:
   - latencias: mediana, p95, p99, máximo; histograma o ECDF; no solo la media;

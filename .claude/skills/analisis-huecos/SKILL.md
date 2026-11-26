@@ -3,7 +3,7 @@ name: analisis-huecos
 description: Identificar huecos de investigación a partir de la matriz y convertirlos en aportaciones, preguntas de investigación y experimentos. Usar tras construir la matriz.
 ---
 
-# Análisis de huecos (`investigacion/huecos.md`)
+# Análisis de huecos (`Investigacion/Estado_del_Arte/huecos.md`)
 
 1. **Huecos**: para cada columna de la matriz, qué combinación casi nadie cubre (p. ej. controladora original + MQTT + gemelo intercambiable + métricas). Cada hueco con los trabajos que lo evidencian.
 2. **Filtrar** los huecos que este proyecto puede cubrir de verdad con un RV-M1, una placa puente y el tiempo de un docente.

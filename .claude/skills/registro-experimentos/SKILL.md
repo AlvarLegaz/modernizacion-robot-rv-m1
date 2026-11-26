@@ -6,7 +6,7 @@ description: Formato obligatorio de los registros de datos de experimentos (JSON
 # Registro de experimentos
 
 ## Dónde
-`experimentos/datos_crudos/<experimento>/<AAAAMMDD-HHMMSS>_<destino>_<descripcion>.jsonl`
+`Investigacion/Experimentos/datos_crudos/<experimento>/<AAAAMMDD-HHMMSS>_<destino>_<descripcion>.jsonl`
 
 ## Formato: una línea JSON por evento
 ```json
@@ -20,5 +20,5 @@ description: Formato obligatorio de los registros de datos de experimentos (JSON
 - Al inicio de cada fichero, un evento `nota` con: versión del código (commit), versión del contrato, broker, red, robot/gemelo, operador.
 
 ## Custodia
-- Los ficheros de `datos_crudos/` **no se editan nunca**. Si un ensayo es inválido, se anota en `experimentos/datos_crudos/<experimento>/INCIDENCIAS.md`.
-- Nada sintético en `datos_crudos/`. Las pruebas con simulador van en `experimentos/datos_simulados/`.
+- Los ficheros de `datos_crudos/` **no se editan nunca**. Si un ensayo es inválido, se anota en `Investigacion/Experimentos/datos_crudos/<experimento>/INCIDENCIAS.md`.
+- Nada sintético en `datos_crudos/`. Las pruebas con simulador van en `Investigacion/Experimentos/datos_simulados/`.

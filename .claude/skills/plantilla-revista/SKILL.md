@@ -5,7 +5,7 @@ description: Requisitos de formato de las revistas candidatas (RIAI y MDPI Senso
 
 # Plantilla de revista
 
-**Las normas cambian: antes de maquetar, consulta las instrucciones vigentes de la revista elegida y anota la fecha de consulta en `paper/NORMAS.md`.**
+**Las normas cambian: antes de maquetar, consulta las instrucciones vigentes de la revista elegida y anota la fecha de consulta en `Investigacion/Paper/NORMAS.md`.**
 
 ## RIAI — Revista Iberoamericana de Automática e Informática Industrial (opción principal)
 - Acceso abierto sin coste de publicación para los autores (financia el Comité Español de Automática).

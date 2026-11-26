@@ -18,7 +18,7 @@ Si una API no responde (allowlist o error), anótalo en el registro y usa la sig
 
 ## Procedimiento
 1. Escribe 3–5 cadenas de búsqueda en inglés (y 1–2 en español) combinando sinónimos: p. ej. `retrofit legacy industrial robot`, `brownfield robot IIoT MQTT`, `digital twin robotic arm MQTT`, `RS-232 gateway robot controller`.
-2. Para cada búsqueda anota en `investigacion/busquedas/<linea>.md`: fecha, fuente, cadena exacta, nº de resultados vistos, seleccionados.
+2. Para cada búsqueda anota en `Investigacion/Estado_del_Arte/busquedas/<linea>.md`: fecha, fuente, cadena exacta, nº de resultados vistos, seleccionados.
 3. **Criterios de inclusión:** revisado por pares (revista o congreso) o tesis; trata la línea; aporta arquitectura, método o resultados medidos. Preferencia 2018+.
 4. **Exclusión:** solo publicitario, sin acceso a resumen, duplicado, o sin relación con manipuladores/maquinaria industrial.
 5. Sigue referencias hacia atrás (bibliografía de los mejores trabajos) y hacia delante (quién los cita) para 1–2 trabajos clave.

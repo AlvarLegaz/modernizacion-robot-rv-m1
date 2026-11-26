@@ -8,16 +8,16 @@ Autor y responsable: Álvar Ginés Legaz Aparicio (doctor, profesor de FP en el 
 
 | Carpeta | Contenido |
 |---|---|
-| `codigo/` | Scripts del robot (`rvm1_control.py`, `rvm1_pendant.py`) y, más adelante, puente MQTT y gemelo |
-| `gemelo/` | Gemelo digital web estático (three.js + mqtt.js en `lib/`): modelo headless (cinemática, emulador D/U-M1, pasarela del contrato, registro JSONL), 3D, teach pendant y modos EMULADOR/SOMBRA/SINCRONIZADO; pruebas con `node --test gemelo/tests` |
-| `broker/` | Servidor MQTT del aula: Mosquitto con usuarios y ACL según el contrato, `crear_usuarios.py`, Docker Compose (broker + web del gemelo), ejemplo para alumnos y pruebas |
-| `docu/` | Propuesta, contrato MQTT, referencias del manual del robot |
-| `investigacion/` | Estado del arte: `busquedas/` (registro de búsquedas), `fichas/` (una ficha por trabajo), `matriz.md`, `huecos.md`, `estado_del_arte.md` |
-| `referencias/refs.bib` | Bibliografía única del proyecto (BibTeX) |
-| `experimentos/` | `protocolos/` (diseño de cada experimento) y `datos_crudos/` (registros reales, **inmutables**) |
-| `analisis/` | Scripts y figuras generadas a partir de `datos_crudos/` |
-| `paper/` | Artículo en LaTeX: `main.tex`, `secciones/`, `figuras/`, `build.sh` y el PDF compilado `main.pdf` |
-| `revisiones/` | Informes de revisión y de verificación de referencias |
+| `Codigo/Software_Control/` | Scripts del robot (`rvm1_control.py`, `rvm1_pendant.py`) y, más adelante, puente MQTT y gemelo |
+| `Codigo/Gemelo/` | Gemelo digital web estático (three.js + mqtt.js en `lib/`): modelo headless (cinemática, emulador D/U-M1, pasarela del contrato, registro JSONL), 3D, teach pendant y modos EMULADOR/SOMBRA/SINCRONIZADO; pruebas con `node --test Codigo/Gemelo/tests` |
+| `Codigo/Broker/` | Servidor MQTT del aula: Mosquitto con usuarios y ACL según el contrato, `crear_usuarios.py`, Docker Compose (broker + web del gemelo), ejemplo para alumnos y pruebas |
+| `Docu/` | Propuesta, contrato MQTT, referencias del manual del robot |
+| `Investigacion/Estado_del_Arte/` | Estado del arte: `busquedas/` (registro de búsquedas), `fichas/` (una ficha por trabajo), `matriz.md`, `huecos.md`, `estado_del_arte.md` |
+| `Investigacion/Referencias/refs.bib` | Bibliografía única del proyecto (BibTeX) |
+| `Investigacion/Experimentos/` | `protocolos/` (diseño de cada experimento) y `datos_crudos/` (registros reales, **inmutables**) |
+| `Investigacion/Experimentos/analisis/` | Scripts y figuras generadas a partir de `datos_crudos/` |
+| `Investigacion/Paper/` | Artículo en LaTeX: `main.tex`, `secciones/`, `figuras/`, `build.sh` y el PDF compilado `main.pdf` |
+| `Investigacion/Revisiones/` | Informes de revisión y de verificación de referencias |
 
 ## Agentes (`.claude/agents/`)
 
@@ -35,20 +35,20 @@ Autor y responsable: Álvar Ginés Legaz Aparicio (doctor, profesor de FP en el 
 Patrón orquestador-trabajadores + productor-evaluador. La sesión principal (con Álvar) orquesta; los subagentes no lanzan otros subagentes.
 
 1. **Estado del arte** — lanzar varios `investigador` en paralelo, uno por línea de búsqueda. Cada uno escribe sus fichas y su registro de búsqueda. La sesión principal (o un `investigador` de síntesis) integra `matriz.md`, `huecos.md` y `estado_del_arte.md`.
-2. **Verificación** — `verificador-referencias` sobre `referencias/refs.bib` → `revisiones/verificacion_referencias.md`. Las referencias no verificadas no se usan.
-3. **Revisión** — `revisor` sobre el estado del arte → `revisiones/revision_estado_arte_vN.md`. Se corrige y se repite hasta que no haya problemas mayores.
-4. **Desarrollo** — `ingeniero` implementa (puente, registro, gemelo). `analista-experimentos` diseña los protocolos en `experimentos/protocolos/`.
+2. **Verificación** — `verificador-referencias` sobre `Investigacion/Referencias/refs.bib` → `Investigacion/Revisiones/verificacion_referencias.md`. Las referencias no verificadas no se usan.
+3. **Revisión** — `revisor` sobre el estado del arte → `Investigacion/Revisiones/revision_estado_arte_vN.md`. Se corrige y se repite hasta que no haya problemas mayores.
+4. **Desarrollo** — `ingeniero` implementa (puente, registro, gemelo). `analista-experimentos` diseña los protocolos en `Investigacion/Experimentos/protocolos/`.
 5. **Experimentos** — los ejecuta **Álvar con el robot real**. Los agentes no ejecutan nada sobre el hardware ni generan datos.
-6. **Análisis** — `analista-experimentos` analiza `datos_crudos/` y genera figuras en `analisis/`.
-7. **Redacción** — `redactor` escribe `paper/` (LaTeX) y lo compila con `paper/build.sh`. Las secciones que no dependen de resultados se pueden redactar antes, dejando `\FALTA{...}` donde falten datos. `investigador` revisa la novedad y los trabajos relacionados; `revisor` hace la revisión completa; `verificador-referencias` repasa las citas finales.
+6. **Análisis** — `analista-experimentos` analiza `datos_crudos/` y genera figuras en `Investigacion/Experimentos/analisis/`.
+7. **Redacción** — `redactor` escribe `Investigacion/Paper/` (LaTeX) y lo compila con `Investigacion/Paper/build.sh`. Las secciones que no dependen de resultados se pueden redactar antes, dejando `\FALTA{...}` donde falten datos. `investigador` revisa la novedad y los trabajos relacionados; `revisor` hace la revisión completa; `verificador-referencias` repasa las citas finales.
 
 ## Reglas obligatorias para todos los agentes
 
 - **No inventar referencias.** Toda cita debe tener DOI o URL comprobable y estar en `refs.bib`. Si no se encuentra la fuente, se dice.
-- **No inventar datos.** Los resultados solo salen de `experimentos/datos_crudos/`. Nunca se rellenan valores, ni "ejemplos ilustrativos" presentados como medidas.
-- **`datos_crudos/` no se modifica nunca**; los análisis leen de ahí y escriben en `analisis/`.
+- **No inventar datos.** Los resultados solo salen de `Investigacion/Experimentos/datos_crudos/`. Nunca se rellenan valores, ni "ejemplos ilustrativos" presentados como medidas.
+- **`datos_crudos/` no se modifica nunca**; los análisis leen de ahí y escriben en `Investigacion/Experimentos/analisis/`.
 - **Latido obligatorio (función de seguridad):** el robot real solo se mueve con latido válido de la aplicación (contrato MQTT, sección 5). Cualquier cliente, pendant o programa que mande al `real` debe emitir el latido y respetar `sin_latido`; ningún cambio puede dejar al robot sin ese requisito ni afirmar que es una función certificada.
-- **Seguridad del robot:** ningún agente envía comandos al robot real. El código que lo controle debe respetar el contrato MQTT (`docu/contrato_mqtt.md`) y las seguridades del pendant.
+- **Seguridad del robot:** ningún agente envía comandos al robot real. El código que lo controle debe respetar el contrato MQTT (`Docu/contrato_mqtt.md`) y las seguridades del pendant.
 - **Separación productor/revisor:** quien escribe un documento no lo revisa.
 - **Extensión:** el artículo no puede pasar de **8–9 páginas** en la plantilla de la revista, referencias incluidas. Respetar el presupuesto de palabras de la skill `redaccion-cientifica`.
 - **Estilo:** el artículo imita el estilo de las publicaciones del autor (skill `estilo-autor`), no el estilo propio del modelo.

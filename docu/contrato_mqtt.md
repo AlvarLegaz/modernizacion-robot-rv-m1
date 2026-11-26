@@ -225,7 +225,7 @@ Persona con la mano junto a la seta en toda sesión con el robot real, celda aco
 
 ## Red y seguridad
 
-Permisos en el broker del aula (`broker/`): cada `alumnoNN` solo publica en `rvm1/gemelo/NN/...`; como su navegador ejecuta su propio gemelo, publica también los topics de estado de ese gemelo (`comandos/ack`, `actuadores`, `posicion/mundo`, `online`). Solo `placa_real` publica el estado de `rvm1/real/...` y solo `profesor` puede mandar `comandos` al robot real. Si no hay NTP, el desfase se puede estimar con la ruta `/hora` del servidor web del aula (hora del servidor en ms).
+Permisos en el broker del aula (`Codigo/Broker/`): cada `alumnoNN` solo publica en `rvm1/gemelo/NN/...`; como su navegador ejecuta su propio gemelo, publica también los topics de estado de ese gemelo (`comandos/ack`, `actuadores`, `posicion/mundo`, `online`). Solo `placa_real` publica el estado de `rvm1/real/...` y solo `profesor` puede mandar `comandos` al robot real. Si no hay NTP, el desfase se puede estimar con la ruta `/hora` del servidor web del aula (hora del servidor en ms).
 
 
 El broker funciona en una red de aula aislada. Como mínimo, el broker exige usuario y contraseña y listas de acceso por topic: solo la placa publica en `rvm1/real/#` salvo `comandos`, y solo los usuarios autorizados publican en `rvm1/real/+/comandos`. Si la red no está aislada, se usa TLS (MQTT sobre puerto 8883, o WSS para clientes web).

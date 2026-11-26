@@ -5,7 +5,7 @@ description: Referencia de comandos RS-232C del Mitsubishi Movemaster RV-M1, par
 
 # Comandos del RV-M1
 
-Implementación de referencia: `codigo/rvm1_control.py` (clase `RVM1`) y `MockRVM1` en `codigo/rvm1_pendant.py`.
+Implementación de referencia: `Codigo/Software_Control/rvm1_control.py` (clase `RVM1`) y `MockRVM1` en `Codigo/Software_Control/rvm1_pendant.py`.
 
 ## Enlace serie
 - RS-232C, por defecto 9600 baudios, 7 bits, paridad par, 2 bits de stop, RTS/CTS (deben coincidir con SW2/SW3 de la controladora D/U-M1).

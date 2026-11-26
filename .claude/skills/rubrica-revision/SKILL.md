@@ -12,14 +12,14 @@ Puntúa de 1 (inaceptable) a 5 (excelente) y justifica cada nota con ejemplos co
 | Novedad | ¿La aportación se distingue de los trabajos de la matriz? ¿Hay trabajos previos que la invaliden? |
 | Cobertura del estado del arte | ¿Faltan líneas, trabajos clave o recientes? ¿Se comparan enfoques o solo se enumeran artículos? |
 | Rigor metodológico | ¿Los experimentos responden a las preguntas? ¿Muestras suficientes? ¿Amenazas a la validez? |
-| Trazabilidad | ¿Cada afirmación tiene cita o dato? ¿Las cifras coinciden con las fuentes y con `analisis/`? |
+| Trazabilidad | ¿Cada afirmación tiene cita o dato? ¿Las cifras coinciden con las fuentes y con `Investigacion/Experimentos/analisis/`? |
 | Reproducibilidad | ¿Código, versiones, contrato y datos permiten repetirlo? |
 | Claridad | Estructura, terminología constante, figuras y tablas útiles |
 | Adecuación a la revista | Alcance, extensión y formato |
 
 Enfoques posibles (el orquestador indica cuáles): **novedad**, **método**, **claridad**, **reproducibilidad**. Si se piden varios revisores, cada uno se centra en su enfoque.
 
-## Informe (`revisiones/revision_<documento>_vN.md`)
+## Informe (`Investigacion/Revisiones/revision_<documento>_vN.md`)
 ```markdown
 # Revisión de <documento> — vN
 ## Resumen del documento (3–4 líneas)

@@ -5,7 +5,7 @@ description: Resumen operativo del contrato MQTT del RV-M1 (topics real/gemelo, 
 
 # Contrato MQTT
 
-Documento de referencia (manda sobre este resumen): `docu/contrato_mqtt.md`.
+Documento de referencia (manda sobre este resumen): `Docu/contrato_mqtt.md`.
 
 - Prefijo: `rvm1/<destino>/<id>/` con destino `real` o `gemelo`.
 - La aplicación **solo publica** en `comandos`. La placa (o el gemelo) publica `comandos/ack`, `actuadores`, `posicion/mundo` y `online` (LWT).
@@ -19,5 +19,5 @@ Documento de referencia (manda sobre este resumen): `docu/contrato_mqtt.md`.
 
 ## Reglas de implementación
 - El gemelo implementa **exactamente** el mismo contrato que la placa real, solo cambia `<destino>`.
-- Cualquier cambio del contrato: nueva versión en la cabecera de `docu/contrato_mqtt.md` y nota de cambios.
+- Cualquier cambio del contrato: nueva versión en la cabecera de `Docu/contrato_mqtt.md` y nota de cambios.
 - Cada mensaje enviado o recibido por el puente se registra según `registro-experimentos`.

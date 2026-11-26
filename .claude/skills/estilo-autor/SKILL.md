@@ -5,7 +5,7 @@ description: Perfil del estilo de redacción científica de Álvar Ginés Legaz 
 
 # Estilo de redacción de Álvar Ginés Legaz Aparicio
 
-Este perfil sale de tres textos completos que se pudieron leer, de los resúmenes de otros trabajos suyos y de los metadatos de su tesis doctoral. La lista completa de publicaciones está en `docu/publicaciones_autor.md`. Las citas literales son breves y se usan solo como muestra.
+Este perfil sale de tres textos completos que se pudieron leer, de los resúmenes de otros trabajos suyos y de los metadatos de su tesis doctoral. La lista completa de publicaciones está en `Docu/publicaciones_autor.md`. Las citas literales son breves y se usan solo como muestra.
 
 ## Fuentes analizadas
 

@@ -5,7 +5,7 @@ description: Plantilla de ficha de lectura para cada trabajo del estado del arte
 
 # Ficha de lectura
 
-Un fichero por trabajo: `investigacion/fichas/<clave>.md`, donde `<clave>` es la misma clave BibTeX (apellidoPrimerAutor + año + palabra, p. ej. `mendonca2025retrofit`).
+Un fichero por trabajo: `Investigacion/Estado_del_Arte/fichas/<clave>.md`, donde `<clave>` es la misma clave BibTeX (apellidoPrimerAutor + año + palabra, p. ej. `mendonca2025retrofit`).
 
 ```markdown
 # <Título>
