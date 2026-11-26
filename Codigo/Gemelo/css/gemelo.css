@@ -46,8 +46,12 @@ button { font-family: inherit; }
 .btn-vista { position: absolute; top: 10px; right: 10px; z-index: 2; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 22px; border: 0;
   background: rgba(21,23,26,.78); color: #fff; font-size: 14px; cursor: pointer; backdrop-filter: blur(4px); }
 /* ?ver=pendant: solo el pendant (el 3D se ve en otro equipo). ?ver=visor: solo el 3D. */
-.ver-pendant #vista3d canvas, .ver-pendant .leyenda3d, .ver-pendant #btn-vista { display: none; }
-.ver-pendant #vista3d::after { content: 'La vista 3D se ve en otro equipo: abre esta página con ?ver=visor'; position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 14px; color: #5a6672; padding: 0 16px; }
+.ver-pendant #principal { display: flex; flex-direction: column; }
+.ver-pendant #vista3d { position: static; flex: none; height: auto; min-height: 0; overflow: visible; background: var(--desk); display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 10px 0; }
+.ver-pendant #vista3d canvas, .ver-pendant .leyenda3d, .ver-pendant #btn-vista { display: none !important; }      /* three.js pone display:block en línea */
+.ver-pendant #vista3d .btn-vista { position: static; }
+.ver-pendant .aviso-colision { position: fixed; }
+.ver-pendant .zona-pendant { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 920px; margin: 0 auto; }
 .ver-visor #pendant, .ver-visor #btn-cubo, .ver-visor #btn-prog, .ver-visor #btn-progs { display: none; }
 .ver-visor #principal { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); display: grid; }
 .ver-visor #vista3d { height: 100%; }

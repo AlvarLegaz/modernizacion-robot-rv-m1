@@ -325,6 +325,10 @@ function desconectarVisor(silencioso) {
 }
 function fotogramaVisor() {
   const idv = barra.config().id;
+  if (!ultimo3d) {                                   // sin datos todavía: el robot en su postura inicial y el cubo y la mesita en su sitio (no el modelo «sin poner»)
+    if (robot.actualizar(Object.assign({}, ctrl.estado(), { apertura: 1 }))) escena.pedir();
+    if (objetos.actualizar(mundo.estado())) escena.pedir();
+  }
   if (ultimo3d) {
     const o = ultimo3d;
     if (robot.actualizar({ q: o.q, apertura: o.apertura, tl: o.tl, err: o.err })) escena.pedir();
